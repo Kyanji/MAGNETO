@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import itertools
 
-def train_norm(param, dataset):
+def train_norm(param, dataset,norm):
     true_label = np.array([])
     for j in range(1, dataset["class"] + 1):
         true_label = np.append(true_label, np.ones((1, dataset["num_tr"][j - 1])) * j)
@@ -33,5 +33,35 @@ def train_norm(param, dataset):
         y_train=np.delete(y_train,i,0)
 
     # norm
+    Out={}
+    if norm==1:
+        Out["Norm"] = 1
+        print('NORM-1')
+        Out["Max"] = dataset["Xtrain"].max()
+        Out["Min"] = dataset["Xtrain"].min()
+        for i in range(len(dataset["Xtrain"])):
+            for j in range(len(dataset["Xtrain"][i])):
+                dataset["Xtrain"][i][j]=(dataset["Xtrain"][i][j] - Out["Min"]) / (Out["Max"] - Out["Min"])
+                if dataset["Xtrain"][i][j]>1:
+                    dataset["Xtrain"][i][j] = 1
+                elif dataset["Xtrain"][i][j]<0:
+                    dataset["Xtrain"][i][j] = 0
+        for i in range(len(dataset["XValidation"])):
+            for j in range(len(dataset["XValidation"][i])):
+                dataset["XValidation"][i][j]=(dataset["XValidation"][i][j] - Out["Min"]) / (Out["Max"] - Out["Min"])
+                if dataset["XValidation"][i][j]>1:
+                    dataset["XValidation"][i][j] = 1
+                elif dataset["XValidation"][i][j]<0:
+                    dataset["XValidation"][i][j] = 0
+        where_are_NaNs = np.isnan( dataset["Xtrain"])
+        where_are_NaNs_val = np.isnan( dataset["Xtrain"])
+        dataset["Xtrain"][where_are_NaNs]=0
+        dataset["XValidation"][where_are_NaNs_val]=0
+    # TODO implement norm 2
+    q={}
+    q["data"]=dataset["Xtrain"]
+    q["method"]='tSNE'
+    q["max_px_size"]=120
+
 
     print("done")
