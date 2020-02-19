@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import itertools
+from lib.Cart2Pixel import Cart2Pixel
+
 
 def train_norm(param, dataset,norm):
     true_label = np.array([])
@@ -54,7 +56,7 @@ def train_norm(param, dataset,norm):
                 elif dataset["XValidation"][i][j]<0:
                     dataset["XValidation"][i][j] = 0
         where_are_NaNs = np.isnan( dataset["Xtrain"])
-        where_are_NaNs_val = np.isnan( dataset["Xtrain"])
+        where_are_NaNs_val = np.isnan( dataset["XValidation"])
         dataset["Xtrain"][where_are_NaNs]=0
         dataset["XValidation"][where_are_NaNs_val]=0
     # TODO implement norm 2
@@ -62,6 +64,8 @@ def train_norm(param, dataset,norm):
     q["data"]=dataset["Xtrain"]
     q["method"]='tSNE'
     q["max_px_size"]=120
+    Cart2Pixel(q)
+
 
 
     print("done")
