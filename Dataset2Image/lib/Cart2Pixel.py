@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 
-def Cart2Pixel(Q=None, A=None, B=None, *args, **kwargs):
+def Cart2Pixel(Q=None):
     # TODO controls on input
 
     # to dataframe
@@ -25,16 +25,23 @@ def Cart2Pixel(Q=None, A=None, B=None, *args, **kwargs):
     x = Y[:, 0]
     y = Y[:, 1]
     n, n_sample = Q["data"].shape
-
-    rval = minimum_bounding_rectangle(Y)
-    for n in range(10):
-        plt.scatter(Y[:, 0], Y[:, 1])
-        bbox = minimum_bounding_rectangle(Y)
-        plt.fill(bbox[:, 0], bbox[:, 1], alpha=0.2)
-        plt.axis('equal')
-        plt.show()
     plt.scatter(x, y)
+    bbox = minimum_bounding_rectangle(Y)
+    plt.fill(bbox[:, 0], bbox[:, 1], alpha=0.2)
+    plt.axis('equal')
+    #rotation
+    grad = (bbox[1,1]-bbox[0,1]) / (bbox[1,0]-bbox[0,0])
+    theta = np.arctan(grad)
+    R = np.asmatrix([[np.cos(theta),np.sin(theta)],[-np.sin(theta),np.cos(theta)]])
+    bboxMatrix=np.matrix(bbox)
+    zrect=(R.dot(bboxMatrix.transpose())).transpose()
+    # zrect=R.dot(bboxMatrix)
+    plt.fill(zrect[:, 0], zrect[:, 1], alpha=0.2)
 
+    coord=np.array([x,y])
+    rotatedData=np.array(R.dot(coord))
+    plt.scatter(rotatedData[0,:],rotatedData[1:])
+    plt.show()
     print(1)
 
 #

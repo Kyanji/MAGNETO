@@ -1,3 +1,4 @@
+import random
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -6,6 +7,7 @@ from lib.Cart2Pixel import Cart2Pixel
 
 
 def train_norm(param, dataset,norm):
+    np.random.seed(param["seed"])
     true_label = np.array([])
     for j in range(1, dataset["class"] + 1):
         true_label = np.append(true_label, np.ones((1, dataset["num_tr"][j - 1])) * j)
