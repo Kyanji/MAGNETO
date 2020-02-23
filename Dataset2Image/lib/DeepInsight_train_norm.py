@@ -63,10 +63,10 @@ def train_norm(param, dataset,norm):
         dataset["XValidation"][where_are_NaNs_val]=0
     # TODO implement norm 2
     q={}
-    q["data"]=dataset["Xtrain"]
+    q["data"]=np.array(dataset["Xtrain"])
     q["method"]='tSNE'
     q["max_px_size"]=120
-    Cart2Pixel(q)
+    Cart2Pixel(q,q["max_px_size"],q["max_px_size"])
 
 
 
