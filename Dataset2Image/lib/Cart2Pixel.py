@@ -1,20 +1,24 @@
+import math
+
 import pandas as pd
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA,KernelPCA
 from sklearn.manifold import TSNE
 from lib.MinRect import minimum_bounding_rectangle
 from lib.ConvPixel import ConvPixel
+import imageio
 import matplotlib.pyplot as plt
+from skimage import img_as_ubyte
 
 import cv2
 import numpy as np
 
 
-def Cart2Pixel(Q=None,A=None,B=None):
+def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     # TODO controls on input
-    if(A!=None):
-        A=A-1
-    if(B!=None):
-        B=B-1
+    if (A != None):
+        A = A - 1
+    if (B != None):
+        B = B - 1
     # to dataframe
     feat_cols = ["col-" + str(i + 1) for i in range(Q["data"].shape[1])]
     df = pd.DataFrame(Q["data"], columns=feat_cols)
@@ -24,7 +28,9 @@ def Cart2Pixel(Q=None,A=None,B=None):
     elif Q["method"] == 'tSNE':
         tsne = TSNE(n_components=2, method="exact", )
         Y = tsne.fit_transform(df)
-    # TODO kernel pca
+    elif Q["method"] == 'kpca':
+        kpca = KernelPCA(n_components=2, kernel='linear')
+        Y = kpca.fit_transform(df)
 
     x = Y[:, 0]
     y = Y[:, 1]
@@ -66,25 +72,35 @@ def Cart2Pixel(Q=None,A=None,B=None):
                 min_p2 = p2
                 min_dist = d
     plt.scatter([rotatedData[0, min_p1], rotatedData[0, min_p2]], [rotatedData[1, min_p1], rotatedData[1, min_p2]])
-   # plt.show()
+    plt.show()
 
     # euclidean distance
-    dmin= np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
+    dmin = np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
     rec_x_axis = abs(zrect[0, 0] - zrect[1, 0])
     rec_y_axis = abs(zrect[1, 1] - zrect[2, 1])
 
-    # TODO line 115-125 (cart 2 pixel)
+    if dynamic_size:
+        precision_old=math.sqrt(2)
+        A = math.ceil(rec_x_axis * precision_old / dmin)
+        B = math.ceil(rec_y_axis * precision_old / dmin)
+        print("Dynamic [A:"+str(A)+" ; B:"+str(B)+"]")
+        if max([A,B])> Q["max_px_size"]:
+            precision = precision_old * Q["max_px_size"] / max([A, B])
+            A = math.ceil(rec_x_axis * precision / dmin)
+            B = math.ceil(rec_y_axis * precision / dmin)
+    # cartesian coordinates to pixels
+    xp = np.round(
+        1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
+    yp = np.round(
+        1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
+    A = max(xp)
+    B = max(yp)
 
-    #cartesian coordinates to pixels
-    xp = np.round(1 + (A * (rotatedData[0,:] - min(rotatedData[0,:])) / (max(rotatedData[0,:])-min(rotatedData[0,:]))))
-    yp = np.round(1 + (-B) * (rotatedData[1,:] - max(rotatedData[1,:])) / (max(rotatedData[1,:])-min(rotatedData[1,:])))
-    A=max(xp)
-    B=max(yp)
-
-    base=1
-    fig=0
-    images=[]
-    for i in range(0,60):
-        images.append(ConvPixel(Q["data"][:,i],xp,yp,A,B,base,fig))
-        print(str(i)+ "of "+ str(n_sample))
+    base = 1
+    fig = 0
+    images = []
+    for i in range(0, n_sample):
+        imageio.imwrite('dataset/CICDS2017/image' + str(i + 1) + '.jpg', img_as_ubyte(ConvPixel(Q["data"][:, i], xp, yp, A, B, base, fig)))
+        if i % 10000 == 0:
+            print(str(i + 1) + "of " + str(n_sample))
     return images
