@@ -47,11 +47,11 @@ def Cart2Pixel(Q=None,A=None,B=None):
     plt.axis('square')
 
     # find duplicate
-    for i in range(len(rotatedData[0, :])):
-        for j in range(i + 1, len(rotatedData[0])):
-            if rotatedData[0, i] == rotatedData[0, j] and rotatedData[1, i] == rotatedData[1, j]:
-                print("duplicate:" + str(i) + " " + str(j))
-                return
+    # for i in range(len(rotatedData[0, :])):
+    #     for j in range(i + 1, len(rotatedData[0])):
+    #         if rotatedData[0, i] == rotatedData[0, j] and rotatedData[1, i] == rotatedData[1, j]:
+    #             print("duplicate:" + str(i) + " " + str(j))
+    #
 
     # nearest point
 
@@ -66,14 +66,14 @@ def Cart2Pixel(Q=None,A=None,B=None):
                 min_p2 = p2
                 min_dist = d
     plt.scatter([rotatedData[0, min_p1], rotatedData[0, min_p2]], [rotatedData[1, min_p1], rotatedData[1, min_p2]])
- #   plt.show()
+   # plt.show()
 
     # euclidean distance
     dmin= np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
     rec_x_axis = abs(zrect[0, 0] - zrect[1, 0])
     rec_y_axis = abs(zrect[1, 1] - zrect[2, 1])
 
-    # TODO line 115-125 (cart 2 pixel
+    # TODO line 115-125 (cart 2 pixel)
 
     #cartesian coordinates to pixels
     xp = np.round(1 + (A * (rotatedData[0,:] - min(rotatedData[0,:])) / (max(rotatedData[0,:])-min(rotatedData[0,:]))))
@@ -83,7 +83,8 @@ def Cart2Pixel(Q=None,A=None,B=None):
 
     base=1
     fig=0
-
-    for i in range(0,n_sample):
-        ConvPixel(Q["data"][:,i],xp,yp,A,B,base,fig)
-    print(1)
+    images=[]
+    for i in range(0,60):
+        images.append(ConvPixel(Q["data"][:,i],xp,yp,A,B,base,fig))
+        print(str(i)+ "of "+ str(n_sample))
+    return images

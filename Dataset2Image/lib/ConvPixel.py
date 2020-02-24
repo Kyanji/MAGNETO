@@ -9,13 +9,13 @@ def ConvPixel(FVec, xp, yp, A, B, base, fig):
         M[int(xp[j]) - 1, int(yp[j]) - 1] = FVec[j]
     zp = np.array([xp, yp])
 
-    zp[:, 0] = zp[:, 12]
-    zp[:, 13] = zp[:, 0]
-    zp[:, 15] = zp[:, 0]
-
-    zp[:,6] = zp[:, 5]
-    zp[:, 2] = zp[:, 6]
-    zp[:, 11] = zp[:, 6]
+    # zp[:, 0] = zp[:, 12]
+    # zp[:, 13] = zp[:, 0]
+    # zp[:, 15] = zp[:, 0]
+    #
+    # zp[:,6] = zp[:, 5]
+    # zp[:, 2] = zp[:, 6]
+    # zp[:, 11] = zp[:, 6]
 
     dup ={}
     # find duplicate
@@ -31,4 +31,4 @@ def ConvPixel(FVec, xp, yp, A, B, base, fig):
     for index in dup.keys():
         x,y=index.split("-")
         M[int(float(x)) - 1, int(float(y)) - 1] = sum(FVec[list(dup[index])])/len(dup[index])
-    print(1)
+    return M
