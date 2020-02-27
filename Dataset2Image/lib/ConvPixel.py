@@ -1,5 +1,4 @@
 import numpy as np
-from collections import defaultdict
 
 
 def ConvPixel(FVec, xp, yp, A, B, base, fig):
@@ -27,7 +26,7 @@ def ConvPixel(FVec, xp, yp, A, B, base, fig):
                 #dup.add(i)
                 #dup[i].add(j)
                 dup.setdefault(str(zp[0, i])+"-"+str(zp[1, i]), {i}).add(j)
-    print("Collisioni:"+str(len(dup.keys())))
+    #print("Collisioni:"+str(len(dup.keys())))
     for index in dup.keys():
         x,y=index.split("-")
         M[int(float(x)) - 1, int(float(y)) - 1] = sum(FVec[list(dup[index])])/len(dup[index])

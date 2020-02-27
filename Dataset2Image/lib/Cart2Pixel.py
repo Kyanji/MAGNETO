@@ -1,14 +1,13 @@
 import math
 
 import pandas as pd
-from sklearn.decomposition import PCA,KernelPCA
+from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import TSNE
-from lib.MinRect import minimum_bounding_rectangle
-from lib.ConvPixel import ConvPixel
+from Dataset2Image.lib.MinRect import minimum_bounding_rectangle
+from Dataset2Image.lib.ConvPixel import ConvPixel
 import imageio
 import matplotlib.pyplot as plt
 from skimage import img_as_ubyte
-
 import cv2
 import numpy as np
 
@@ -72,7 +71,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
                 min_p2 = p2
                 min_dist = d
     plt.scatter([rotatedData[0, min_p1], rotatedData[0, min_p2]], [rotatedData[1, min_p1], rotatedData[1, min_p2]])
-    plt.show()
+    #plt.show()
 
     # euclidean distance
     dmin = np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
@@ -80,11 +79,11 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     rec_y_axis = abs(zrect[1, 1] - zrect[2, 1])
 
     if dynamic_size:
-        precision_old=math.sqrt(2)
+        precision_old = math.sqrt(2)
         A = math.ceil(rec_x_axis * precision_old / dmin)
         B = math.ceil(rec_y_axis * precision_old / dmin)
-        print("Dynamic [A:"+str(A)+" ; B:"+str(B)+"]")
-        if max([A,B])> Q["max_px_size"]:
+        print("Dynamic [A:" + str(A) + " ; B:" + str(B) + "]")
+        if max([A, B]) > Q["max_px_size"]:
             precision = precision_old * Q["max_px_size"] / max([A, B])
             A = math.ceil(rec_x_axis * precision / dmin)
             B = math.ceil(rec_y_axis * precision / dmin)
@@ -100,7 +99,10 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     fig = 0
     images = []
     for i in range(0, n_sample):
-        imageio.imwrite('dataset/CICDS2017/image' + str(i + 1) + '.jpg', img_as_ubyte(ConvPixel(Q["data"][:, i], xp, yp, A, B, base, fig)))
+        images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B, base, fig))
+        filename = "dataset/CICDS2017/images/img"+str(i)+".jpg"
+        cv2.imwrite(filename, images[i])
         if i % 10000 == 0:
-            print(str(i + 1) + "of " + str(n_sample))
+            print(str(i) + "of " + str(n_sample))
+
     return images
