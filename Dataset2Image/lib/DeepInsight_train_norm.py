@@ -1,10 +1,6 @@
-import random
 import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-import itertools
 from Dataset2Image.lib.Cart2Pixel import Cart2Pixel
-from Dataset2Image.lib.deep_base_model import cnn1
+from Dataset2Image.lib.deep_base_model import cnn1_model
 
 
 def train_norm(param, dataset, norm):
@@ -35,7 +31,7 @@ def train_norm(param, dataset, norm):
             #
             # print("Num GPUs Available: ", tf.config.experimental.list_physical_devices('GPU'))
             #
-            cnn1(dataset["Xtrain"], y_train)
+            cnn1_model(dataset["Xtrain"], y_train)
 
         else:
             q = {"data": np.array(dataset["Xtrain"].values).transpose(), "method": param["Metod"],
@@ -44,8 +40,8 @@ def train_norm(param, dataset, norm):
             print(q["max_px_size"])
             images = Cart2Pixel(q, q["max_px_size"], q["max_px_size"], param["Dynamic_Size"])
 
-            cnn1(images, y_train[0:30000])
+            cnn1_model(images, y_train[0:30000])
     else:
-
-        cnn1(dataset["Xtrain"],dataset["Classification"] )
+        optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
+        cnn1_model(dataset["Xtrain"], dataset["Classification"], optimizable_variable)
     print("done")

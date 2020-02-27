@@ -1,24 +1,22 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 import numpy as np
-from tensorflow.keras.layers import Dense, Dropout, Input
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten
-from tensorflow.keras.models import Model
-from tensorflow.keras.datasets import mnist
-from tensorflow.keras.utils import to_categorical
+from keras.layers import Dense, Input, Activation, BatchNormalization, AveragePooling2D
+from keras.layers import Conv2D, MaxPooling2D, Flatten
+from keras.models import Model
+from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split  # load MNIST dataset
+from keras.layers import Concatenate
+from keras.optimizers import SGD
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 # (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
 # from sparse label to categorical
-def cnn1(dataset, y):
+def cnn1_model(dataset, y, param):
     x_train, x_test, y_train, y_test = train_test_split(dataset,
                                                         y,
                                                         test_size=0.1,
@@ -40,28 +38,69 @@ def cnn1(dataset, y):
     # network parameters
     input_shape = (image_size, image_size, 1)
     batch_size = 128
-    kernel_size = 3
-    filters = 64
-    dropout = 0.3
 
     # use functional API to build cnn layers
     inputs = Input(shape=input_shape)
-    y = Conv2D(filters=filters,
-               kernel_size=kernel_size,
-               activation='relu')(inputs)
-    y = MaxPooling2D()(y)
-    y = Conv2D(filters=filters,
-               kernel_size=kernel_size,
-               activation='relu')(y)
-    y = MaxPooling2D()(y)
-    y = Conv2D(filters=filters,
-               kernel_size=kernel_size,
-               activation='relu')(y)
-    # image to vector before connecting to dense layer
-    y = Flatten()(y)
-    # dropout regularization
-    y = Dropout(dropout)(y)
-    outputs = Dense(num_labels, activation='softmax')(y)
+    y1 = Conv2D(filters=param["filter_size"],
+               kernel_size=param["kernel"],
+               padding="same")(inputs)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation('relu')(y1)
+    y1 = MaxPooling2D(strides=2,pool_size=2)(y1)
+
+    y1 = Conv2D(filters=param["filter_size"],
+               kernel_size=param["kernel"],
+               padding="same")(y1)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation('relu')(y1)
+    y1 = MaxPooling2D(strides=2,pool_size=2)(y1)
+
+    y1 = Conv2D(filters=param["filter_size"],
+               kernel_size=param["kernel"],
+               padding="same")(y1)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation('relu')(y1)
+    y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
+
+    y1 = Conv2D(filters=param["filter_size"],
+               kernel_size=param["kernel"],
+               padding="same")(y1)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation('relu')(y1)
+
+    # Layer 2
+    y2 = Conv2D(filters=param["filter_size2"],
+                kernel_size=param["kernel"],
+                padding="same")(inputs)
+    y2 = BatchNormalization()(y2)
+    y2 = Activation('relu')(y2)
+    y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
+
+    y2 = Conv2D(filters=param["filter_size2"],
+                kernel_size=param["kernel"],
+                padding="same")(y2)
+    y2 = BatchNormalization()(y2)
+    y2 = Activation('relu')(y2)
+    y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
+
+    y2 = Conv2D(filters=param["filter_size2"],
+                kernel_size=param["kernel"],
+                padding="same")(y2)
+    y2 = BatchNormalization()(y2)
+    y2 = Activation('relu')(y2)
+    y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
+
+    y2 = Conv2D(filters=param["filter_size2"],
+                kernel_size=param["kernel"],
+                padding="same")(y2)
+    y2 = BatchNormalization()(y2)
+    y2 = Activation('relu')(y2)
+
+    # Addition Layer
+    y3 = Concatenate()([y1, y2])
+    y3 = AveragePooling2D(strides=2, pool_size=2)(y3)
+    y3 = Flatten()(y3)
+    outputs = Dense(num_labels, activation='softmax')(y3)
 
     # build the model by supplying inputs/outputs
     model = Model(inputs=inputs, outputs=outputs)
@@ -69,16 +108,18 @@ def cnn1(dataset, y):
     model.summary()
 
     # classifier loss, Adam optimizer, classifier accuracy
+    sgd = SGD(lr=param["learning_rate"], momentum=param["momentum"], )
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
-                  metrics=['accuracy'])
+    optimizer = 'adam',
+    metrics = ['accuracy'])
 
     # train the model with input images and labels
     model.fit(x_train,
               y_train,
               validation_data=(x_test, y_test),
               epochs=20,
-              batch_size=batch_size)
+              batch_size=batch_size,
+              use_multiprocessing=True,)
 
     # model accuracy on test dataset
     score = model.evaluate(x_test,
