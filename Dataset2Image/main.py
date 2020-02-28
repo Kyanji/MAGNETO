@@ -9,7 +9,7 @@ import cv2
 
 # Parameters
 param = {"Max_P_Size": 33, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
-         "LoadFromJson": True}
+         "LoadFromJson": False}
 
 # TODO delete
 # with open('dataset/exptable.txt') as json_file:
