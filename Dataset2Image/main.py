@@ -36,9 +36,10 @@ else:
     model=DeepInsight_train_norm.train_norm(param, images, norm=True)
     model.save('dataset/CICDS2017/param/model.h5')
 
-    # with open('dataset/CICDS2017/Test.csv', 'r') as file:
-    #     test = {"Xtest": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
-    #     test["Classification"] = test["Xtest"]["Classification"]
-    #     del test["Xtrain"]["Classification"]
+    with open('dataset/CICDS2017/Test.csv', 'r') as file:
+        test = {"Xtest": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
+        test["Classification"] = test["Xtest"]["Classification"]
+        del test["Xtrain"]["Classification"]
+
 
 

@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split  # load MNIST dataset
 from keras.layers import Concatenate
 from keras.optimizers import SGD
 from keras import backend as K
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
@@ -158,21 +159,21 @@ def model_train_with_val(dataset, y, param):
     y1 = Activation('relu')(y1)
     y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
 
-    y1 = Conv2D(filters=2*param["filter_size"],
+    y1 = Conv2D(filters=2 * param["filter_size"],
                 kernel_size=(param["kernel"], param["kernel"]),
                 padding="same")(y1)
     y1 = BatchNormalization()(y1)
     y1 = Activation('relu')(y1)
     y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
 
-    y1 = Conv2D(filters=4*param["filter_size"],
+    y1 = Conv2D(filters=4 * param["filter_size"],
                 kernel_size=(param["kernel"], param["kernel"]),
                 padding="same")(y1)
     y1 = BatchNormalization()(y1)
     y1 = Activation('relu')(y1)
     y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
 
-    y1 = Conv2D(filters=8*param["filter_size"],
+    y1 = Conv2D(filters=8 * param["filter_size"],
                 kernel_size=(param["kernel"], param["kernel"]),
                 padding="same")(y1)
     y1 = BatchNormalization()(y1)
@@ -186,21 +187,21 @@ def model_train_with_val(dataset, y, param):
     y2 = Activation('relu')(y2)
     y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
 
-    y2 = Conv2D(filters=2*param["filter_size2"],
+    y2 = Conv2D(filters=2 * param["filter_size2"],
                 kernel_size=(param["kernel"], param["kernel"]),
                 padding="same")(y2)
     y2 = BatchNormalization()(y2)
     y2 = Activation('relu')(y2)
     y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
 
-    y2 = Conv2D(filters=4*param["filter_size2"],
+    y2 = Conv2D(filters=4 * param["filter_size2"],
                 kernel_size=(param["kernel"], param["kernel"]),
                 padding="same")(y2)
     y2 = BatchNormalization()(y2)
     y2 = Activation('relu')(y2)
     y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
 
-    y2 = Conv2D(filters=8*param["filter_size2"],
+    y2 = Conv2D(filters=8 * param["filter_size2"],
                 kernel_size=(param["kernel"], param["kernel"]),
                 padding="same")(y2)
     y2 = BatchNormalization()(y2)
@@ -223,20 +224,15 @@ def model_train_with_val(dataset, y, param):
                   metrics=['accuracy'])
 
     # train the model with input images and labels
-    model.fit(x_train,
-              y_train,
-              validation_data=(x_test, y_test),
-              epochs=10,
-              batch_size=batch_size,
-              use_multiprocessing=False,
-              verbose=1)
+    hist = model.fit(x_train,
+                     y_train,
+                     validation_data=(x_test, y_test),
+                     epochs=5,
+                     batch_size=batch_size,
+                     use_multiprocessing=False,
+                     verbose=2)
 
-    # model accuracy on test dataset
-    score = model.evaluate(x_test,
-                           y_test,
-                           batch_size=batch_size,
-                           verbose=0)
-    print("\nTest accuracy: %.1f%%" % (100.0 * score[1]))
-    print("accuracy:"+str(100.0 * score[1]))
+    score = hist.history["accuracy"][-1]
+    print("accuracy: " + str(100.0 * score))
 
-    return 100.0 * score[1]
+    return 100.0 * score
