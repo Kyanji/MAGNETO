@@ -1,6 +1,7 @@
 import math
 
 import pandas as pd
+import json as json
 from sklearn.decomposition import PCA, KernelPCA
 from sklearn.manifold import TSNE
 from Dataset2Image.lib.MinRect import minimum_bounding_rectangle
@@ -14,7 +15,7 @@ import numpy as np
 
 def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     # TODO controls on input
-    if (A != None):
+    if A is not None:
         A = A - 1
     if (B != None):
         B = B - 1
@@ -71,7 +72,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
                 min_p2 = p2
                 min_dist = d
     plt.scatter([rotatedData[0, min_p1], rotatedData[0, min_p2]], [rotatedData[1, min_p1], rotatedData[1, min_p2]])
-    #plt.show()
+    # plt.show()
 
     # euclidean distance
     dmin = np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
@@ -98,9 +99,17 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     base = 1
     fig = 0
     images = []
+
+    # Save Model to JSON file
+    image_model = {"xp": xp.tolist(), "yp": yp.tolist(), "A": A, "B": B}
+    j = json.dumps(image_model)
+    f = open("dataset/CICDS2017/param/image_model.json", "w")
+    f.write(j)
+    f.close()
+
     for i in range(0, n_sample):
         images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B, base, fig))
-        filename = "dataset/CICDS2017/images/img"+str(i)+".jpg"
+        filename = "dataset/CICDS2017/images/img" + str(i) + ".jpg"
         cv2.imwrite(filename, images[i])
         if i % 10000 == 0:
             print(str(i) + "of " + str(n_sample))
