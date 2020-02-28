@@ -1,6 +1,22 @@
 import numpy as np
+from bayes_opt import BayesianOptimization
+from hyperopt import fmin, tpe, hp
+from keras import backend as K
+
 from Dataset2Image.lib.Cart2Pixel import Cart2Pixel
 from Dataset2Image.lib.deep_base_model import cnn1_model
+from hyperopt import STATUS_OK
+
+XGlobal = []
+YGlobal = []
+
+
+def hyperopt_fcn(params):
+    print("len:" + str(len(XGlobal)) + " " + str(len(YGlobal)))
+
+    model = cnn1_model(XGlobal, YGlobal, params)
+    K.clear_session()
+    return {'loss': -model, 'status': STATUS_OK}
 
 
 def train_norm(param, dataset, norm):
@@ -42,6 +58,18 @@ def train_norm(param, dataset, norm):
 
             cnn1_model(images, y_train[0:30000])
     else:
-        optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
-        cnn1_model(dataset["Xtrain"], dataset["Classification"], optimizable_variable)
+        # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
+        optimizable_variable = {"filter_size": hp.choice("filter_size", np.arange(2, 10 + 1)),
+                                "kernel": hp.choice("kernel", np.arange(2, 16 + 1)),
+                                "filter_size2": hp.choice("filter_size2", np.arange(4, 30 + 1)),
+                                "learning_rate": hp.uniform("learning_rate", 1e-5, 1e-1),
+                                "momentum": hp.uniform("momentum", 0.8, 0.95)}
+
+        global XGlobal
+        XGlobal = dataset["Xtrain"]
+        global YGlobal
+        YGlobal = dataset["Classification"]
+        best = fmin(hyperopt_fcn, optimizable_variable, algo=tpe.suggest, max_evals=10)
+
+        # cnn1_model(dataset["Xtrain"], dataset["Classification"], optimizable_variable)
     print("done")

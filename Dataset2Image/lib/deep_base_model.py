@@ -10,6 +10,7 @@ from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split  # load MNIST dataset
 from keras.layers import Concatenate
 from keras.optimizers import SGD
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
@@ -38,60 +39,59 @@ def cnn1_model(dataset, y, param):
     # network parameters
     input_shape = (image_size, image_size, 1)
     batch_size = 128
-
     # use functional API to build cnn layers
     inputs = Input(shape=input_shape)
     y1 = Conv2D(filters=param["filter_size"],
-               kernel_size=param["kernel"],
-               padding="same")(inputs)
-    y1 = BatchNormalization()(y1)
-    y1 = Activation('relu')(y1)
-    y1 = MaxPooling2D(strides=2,pool_size=2)(y1)
-
-    y1 = Conv2D(filters=param["filter_size"],
-               kernel_size=param["kernel"],
-               padding="same")(y1)
-    y1 = BatchNormalization()(y1)
-    y1 = Activation('relu')(y1)
-    y1 = MaxPooling2D(strides=2,pool_size=2)(y1)
-
-    y1 = Conv2D(filters=param["filter_size"],
-               kernel_size=param["kernel"],
-               padding="same")(y1)
+                kernel_size=(param["kernel"],param["kernel"]),
+                padding="same")(inputs)
     y1 = BatchNormalization()(y1)
     y1 = Activation('relu')(y1)
     y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
 
     y1 = Conv2D(filters=param["filter_size"],
-               kernel_size=param["kernel"],
-               padding="same")(y1)
+                kernel_size=(param["kernel"],param["kernel"]),
+                padding="same")(y1)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation('relu')(y1)
+    y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
+
+    y1 = Conv2D(filters=param["filter_size"],
+                kernel_size=(param["kernel"],param["kernel"]),
+                padding="same")(y1)
+    y1 = BatchNormalization()(y1)
+    y1 = Activation('relu')(y1)
+    y1 = MaxPooling2D(strides=2, pool_size=2)(y1)
+
+    y1 = Conv2D(filters=param["filter_size"],
+                kernel_size=(param["kernel"],param["kernel"]),
+                padding="same")(y1)
     y1 = BatchNormalization()(y1)
     y1 = Activation('relu')(y1)
 
     # Layer 2
     y2 = Conv2D(filters=param["filter_size2"],
-                kernel_size=param["kernel"],
+                kernel_size=(param["kernel"],param["kernel"]),
                 padding="same")(inputs)
     y2 = BatchNormalization()(y2)
     y2 = Activation('relu')(y2)
     y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
 
     y2 = Conv2D(filters=param["filter_size2"],
-                kernel_size=param["kernel"],
+                kernel_size=(param["kernel"],param["kernel"]),
                 padding="same")(y2)
     y2 = BatchNormalization()(y2)
     y2 = Activation('relu')(y2)
     y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
 
     y2 = Conv2D(filters=param["filter_size2"],
-                kernel_size=param["kernel"],
+                kernel_size=(param["kernel"],param["kernel"]),
                 padding="same")(y2)
     y2 = BatchNormalization()(y2)
     y2 = Activation('relu')(y2)
     y2 = MaxPooling2D(strides=2, pool_size=2)(y2)
 
     y2 = Conv2D(filters=param["filter_size2"],
-                kernel_size=param["kernel"],
+                kernel_size=(param["kernel"],param["kernel"]),
                 padding="same")(y2)
     y2 = BatchNormalization()(y2)
     y2 = Activation('relu')(y2)
@@ -110,16 +110,16 @@ def cnn1_model(dataset, y, param):
     # classifier loss, Adam optimizer, classifier accuracy
     sgd = SGD(lr=param["learning_rate"], momentum=param["momentum"], )
     model.compile(loss='categorical_crossentropy',
-    optimizer = 'adam',
-    metrics = ['accuracy'])
+                  optimizer='adam',
+                  metrics=['accuracy'])
 
     # train the model with input images and labels
     model.fit(x_train,
               y_train,
               validation_data=(x_test, y_test),
-              epochs=20,
+              epochs=1,
               batch_size=batch_size,
-              use_multiprocessing=True,)
+              use_multiprocessing=True, )
 
     # model accuracy on test dataset
     score = model.evaluate(x_test,
@@ -127,3 +127,4 @@ def cnn1_model(dataset, y, param):
                            batch_size=batch_size,
                            verbose=0)
     print("\nTest accuracy: %.1f%%" % (100.0 * score[1]))
+    return (100.0 * score[1])
