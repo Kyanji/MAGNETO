@@ -9,7 +9,7 @@ from keras.models import Model
 from keras.utils import to_categorical
 from sklearn.model_selection import train_test_split  # load MNIST dataset
 from keras.layers import Concatenate
-from keras.optimizers import SGD
+from keras.optimizers import SGD, Adam
 from keras import backend as K
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -219,7 +219,8 @@ def model_train_with_val(dataset, y, param):
     # model.summary()
 
     sgd = SGD(lr=param["learning_rate"], momentum=param["momentum"])
-    model.compile(loss='categorical_crossentropy',
+
+    model.compile(loss='binary_crossentropy',
                   optimizer=sgd,
                   metrics=['accuracy'])
 
@@ -227,10 +228,12 @@ def model_train_with_val(dataset, y, param):
     hist = model.fit(x_train,
                      y_train,
                      validation_data=(x_test, y_test),
-                     epochs=5,
+                     epochs=2,
                      batch_size=batch_size,
-                     use_multiprocessing=False,
-                     verbose=2)
+                     use_multiprocessing=True,
+                     verbose=0,
+                     shuffle=True
+                     )
 
     score = hist.history["accuracy"][-1]
     print("accuracy: " + str(100.0 * score))

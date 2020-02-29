@@ -5,7 +5,7 @@ def ConvPixel(FVec, xp, yp, A, B, base, fig):
     n = len(FVec)
     M = np.ones([int(A), int(B)]) * base
     for j in range(0, n):
-        M[int(xp[j]) - 1, int(yp[j]) - 1] = 0 #FVec[j]
+        M[int(xp[j]) - 1, int(yp[j]) - 1] = FVec[j]
     zp = np.array([xp, yp])
 
     # zp[:, 0] = zp[:, 12]
@@ -30,4 +30,5 @@ def ConvPixel(FVec, xp, yp, A, B, base, fig):
     for index in dup.keys():
         x,y=index.split("-")
         M[int(float(x)) - 1, int(float(y)) - 1] = sum(FVec[list(dup[index])])/len(dup[index])
+
     return M

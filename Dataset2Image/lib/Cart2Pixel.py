@@ -109,9 +109,15 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
 
     for i in range(0, n_sample):
         images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B, base, fig))
-        filename = "dataset/CICDS2017/images/img" + str(i) + ".jpg"
-        cv2.imwrite(filename, images[i])
+        # filename = "dataset/CICDS2017/images/img" + str(i) + ".jpg"
+        # cv2.imwrite(filename, images[i])
         if i % 10000 == 0:
             print(str(i) + "of " + str(n_sample))
+    ret = json.dumps([img.tolist() for img in images])
+
+    filename = "datasetImage.json"
+    myfile = open(filename, 'w')
+    myfile.write(ret)
+    myfile.close()
 
     return images

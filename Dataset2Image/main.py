@@ -1,3 +1,4 @@
+import json
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import glob
@@ -9,7 +10,7 @@ import cv2
 
 # Parameters
 param = {"Max_P_Size": 33, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
-         "LoadFromJson": False}
+         "LoadFromJson": True}
 
 # TODO delete
 # with open('dataset/exptable.txt') as json_file:
@@ -25,10 +26,8 @@ if not param["LoadFromJson"]:
     model.save('dataset/CICDS2017/param/model.h5')
 
 else:
-
-    filenames = glob.glob("dataset/CICDS2017/images/*.jpg")
-    filenames.sort()
-    images = [cv2.imread(img, 0) for img in filenames]
+    with open('datasetImage.json', 'r') as f:
+        images = json.load(f)
 
     with open('dataset/CICDS2017/TrainOneCls.csv', 'r') as file:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}

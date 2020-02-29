@@ -47,7 +47,7 @@ def train_norm(param, dataset, norm):
     optimizable_variable = {"filter_size": hp.choice("filter_size", np.arange(2, 10 + 1)),
                             "kernel": hp.choice("kernel", np.arange(2, 16 + 1)),
                             "filter_size2": hp.choice("filter_size2", np.arange(4, 30 + 1)),
-                            "learning_rate": hp.uniform("learning_rate", 0.1, 0.01),
+                            "learning_rate": hp.uniform("learning_rate", 1e-5, 1e-1),
                             "momentum": hp.uniform("momentum", 0.8, 0.95)}
 
     global XGlobal
@@ -55,7 +55,7 @@ def train_norm(param, dataset, norm):
     global YGlobal
     YGlobal = y
     trials = Trials()
-    best = fmin(hyperopt_fcn, optimizable_variable, algo=tpe.suggest, max_evals=10, trials=trials)
+    best = fmin(hyperopt_fcn, optimizable_variable, algo=tpe.suggest, max_evals=20, trials=trials)
     print("migliori parametri")
     print(best)
     # returning best model with hyperopt parameters
