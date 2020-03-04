@@ -1,10 +1,10 @@
 import numpy as np
 from keras import Model, Input
-from keras.models import Sequential
 from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, BatchNormalization, Activation, AveragePooling2D, Add, \
     Concatenate
 from keras.optimizers import SGD
 from keras.utils import to_categorical
+from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import train_test_split
 
 
@@ -12,7 +12,8 @@ def deep_train(images, y, param=None):
     print(param)
     x_train, x_test, y_train, y_test = train_test_split(images,
                                                         y,
-                                                        test_size=0.1,
+                                                        test_size=0.2,
+                                                        stratify=y,
                                                         random_state=100)
     x_train = np.array(x_train)
     x_test = np.array(x_test)
@@ -104,13 +105,14 @@ def deep_train(images, y, param=None):
     # Train the model.
     hist = model.fit(
         x_train,
-        to_categorical(y_train),
-        epochs=1,
+        y_train,
+        epochs=15,
         verbose=2,
-        validation_data=(x_test, to_categorical(y_test)),
+        validation_data=(x_test, y_test),
     )
+
 
     score = hist.history["accuracy"][-1]
     print("Accuracy: " + str(100.0 * score))
 
-    return 100.0 * score
+    return model

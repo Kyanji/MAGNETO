@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def ConvPixel(FVec, xp, yp, A, B, base, fig):
+def ConvPixel(FVec, xp, yp, A, B, base=1):
     n = len(FVec)
     M = np.ones([int(A), int(B)]) * base
     for j in range(0, n):

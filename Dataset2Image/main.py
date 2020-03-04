@@ -1,14 +1,13 @@
 import json
 import os
-
-from sklearn.model_selection import train_test_split
+import pickle
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import glob
+
 import pandas as pd
 import csv
 from Dataset2Image.lib import DeepInsight_train_norm
-import cv2
+import numpy as np
 
 # Parameters
 param = {"Max_P_Size": 33, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
@@ -19,25 +18,56 @@ param = {"Max_P_Size": 33, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio":
 #    data = json.load(json_file)["dset"]
 
 if not param["LoadFromJson"]:
+    data = {}
     with open('dataset/CICDS2017/TrainOneCls.csv', 'r') as file:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
         data["Classification"] = data["Xtrain"]["Classification"]
         del data["Xtrain"]["Classification"]
+    with open('dataset/CICDS2017/Test.csv', 'r') as file:
+        Xtest=pd.DataFrame(list(csv.DictReader(file)))
+        Xtest.replace("", np.nan, inplace=True)
+        Xtest.dropna(inplace=True)
+        data["Xtest"]=Xtest.astype(float)
 
-    model = DeepInsight_train_norm.train_norm(param, data, norm=True)
+        data["Ytest"] = data["Xtest"]["Classification"]
+        del data["Xtest"]["Classification"]
+
+    filename = "dataset/CICDS2017/param/y_trainingset.pickle"
+    f_myfile = open(filename, 'wb')
+    pickle.dump(data["Classification"], f_myfile)
+    f_myfile.close()
+
+    filename = "dataset/CICDS2017/param/y_testingset.pickle"
+    f_myfile = open(filename, 'wb')
+    pickle.dump(data["Ytest"], f_myfile)
+    f_myfile.close()
+
+    model = DeepInsight_train_norm.train_norm(param, data, norm=False)
     model.save('dataset/CICDS2017/param/model.h5')
 
 else:
-    with open('datasetImage.json', 'r') as f:
-        images = json.load(f)
+    images={}
+    f_myfile = open('dataset/CICDS2017/param/trainingsetImage.pickle', 'rb')
+    images["Xtrain"] = pickle.load(f_myfile)
+    f_myfile.close()
 
-    with open('dataset/CICDS2017/TrainOneCls.csv', 'r') as file:
-        data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
-        images = {"Xtrain": images, "Classification": data["Xtrain"]["Classification"]}
-    model = DeepInsight_train_norm.train_norm(param, images, norm=True)
-    # model.save('dataset/CICDS2017/param/model.h5')
+
+    f_myfile = open('dataset/CICDS2017/param/y_trainingset.pickle', 'rb')
+    images["Classification"] = pickle.load(f_myfile)
+    f_myfile.close()
+
+    f_myfile = open('dataset/CICDS2017/param/testingsetImage.pickle', 'rb')
+    images["Xtest"] = pickle.load(f_myfile)
+    f_myfile.close()
+
+    f_myfile = open('dataset/CICDS2017/param/y_testingset.pickle', 'rb')
+    images["Ytest"] = pickle.load(f_myfile)
+    f_myfile.close()
 
     # with open('dataset/CICDS2017/Test.csv', 'r') as file:
-    #     test = {"Xtest": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
-    #     test["Classification"] = test["Xtest"]["Classification"]
-    #     del test["Xtrain"]["Classification"]
+    #     Xtest=pd.DataFrame(list(csv.DictReader(file)))
+    #     Xtest.replace("", np.nan, inplace=True)
+    #     Xtest.dropna(inplace=True)
+    #     images["Ytest"] = Xtest["Classification"]
+
+    model = DeepInsight_train_norm.train_norm(param, images, norm=False)

@@ -1,4 +1,5 @@
 import math
+import pickle
 
 import pandas as pd
 import json as json
@@ -96,8 +97,6 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     A = max(xp)
     B = max(yp)
 
-    base = 1
-    fig = 0
     images = []
 
     # Save Model to JSON file
@@ -107,17 +106,21 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     f.write(j)
     f.close()
 
-    for i in range(0, n_sample):
-        images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B, base, fig))
+    images = []
+    # Training set
+    #for i in range(0, 700):
+    images = [ConvPixel(Q["data"][:, i], xp, yp, A, B) for i in range(0, n_sample)]
+        # images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B))
         # filename = "dataset/CICDS2017/images/img" + str(i) + ".jpg"
         # cv2.imwrite(filename, images[i])
-        if i % 10000 == 0:
-            print(str(i) + "of " + str(n_sample))
-    ret = json.dumps([img.tolist() for img in images])
+        # if i % 10000 == 0:
+        #     print(str(i) + "of " + str(n_sample))
+    #ret = json.dump([img.tolist() for img in images])
 
-    filename = "datasetImage.json"
-    myfile = open(filename, 'w')
-    myfile.write(ret)
-    myfile.close()
+    filename = "dataset/CICDS2017/param/trainingsetImage.pickle"
+    f_myfile = open(filename, 'wb')
+    pickle.dump(images, f_myfile)
+    f_myfile.close()
 
-    return images
+
+    return images, image_model
