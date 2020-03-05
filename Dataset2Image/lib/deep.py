@@ -111,7 +111,6 @@ def deep_train(images, y, param=None):
         validation_data=(x_test, y_test),
     )
 
-
     score = hist.history["accuracy"][-1]
     print("Accuracy: " + str(100.0 * score))
 

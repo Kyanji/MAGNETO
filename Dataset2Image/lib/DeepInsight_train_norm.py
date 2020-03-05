@@ -123,10 +123,10 @@ def train_norm(param, dataset, norm):
     # with open('dataset/CICDS2017/param/param.json') as json_file:
     #     SavedParameters = json.load(json_file)
 
-    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=40)
+    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=5)
 
     print("migliori parametri")
-    SavedParameters = sorted(SavedParameters, key=lambda i: i['accuracy'], reverse=True)
+    SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy'], reverse=True)
     print(SavedParameters[0])
 
     # returning best model with hyperopt parameters
