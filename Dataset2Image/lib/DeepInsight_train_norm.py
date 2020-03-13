@@ -1,6 +1,7 @@
 import csv
 import json
 import pickle
+import timeit
 
 import numpy as np
 from hyperopt import STATUS_OK
@@ -24,25 +25,34 @@ SavedParameters = []
 
 def hyperopt_fcn(params):
     global SavedParameters
-    for p in SavedParameters:
-        if p["filter"] == params["filter"] and p["filter2"] == params["filter2"] and p["kernel"] == params["kernel"] and\
-                p["learning_rate"] == params["learning_rate"] and p["momentum"] == params["momentum"]:
-            return {'loss': np.inf, 'status': STATUS_OK}
+    start = timeit.timeit()
+    # for p in SavedParameters:
+    #     if p["filter"] == params["filter"] and p["filter2"] == params["filter2"] and p["kernel"] == params["kernel"] and\
+    #             p["learning_rate"] == params["learning_rate"] and p["momentum"] == params["momentum"]:
+    #         return {'loss': np.inf, 'status': STATUS_OK}
 
     model = deep_train(XGlobal, YGlobal, params)
     Y_predicted = model.predict(XTestGlobal, verbose=0, use_multiprocessing=True, workers=12)
     Y_predicted = np.argmax(Y_predicted, axis=1)
+    end = timeit.timeit()
+
     cf = confusion_matrix(YTestGlobal, Y_predicted)
     print(cf)
     print(balanced_accuracy_score(YTestGlobal, Y_predicted))
     K.clear_session()
+    # SavedParameters.append(
+    #     {"balanced_accuracy": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN": cf[0][0],
+    #      "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "filter": params["filter"], "filter2": params["filter2"],
+    #      "kernel": params["kernel"], "learning_rate": params["learning_rate"], "momentum": params["momentum"]})
     SavedParameters.append(
-        {"balanced_accuracy": balanced_accuracy_score(YTestGlobal, Y_predicted)*100, "TN": cf[0][0],
-         "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "filter": params["filter"], "filter2": params["filter2"],
-         "kernel": params["kernel"], "learning_rate": params["learning_rate"], "momentum": params["momentum"]})
+        {"balanced_accuracy": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN": cf[0][0],
+         "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "kernel": params["kernel"],
+         "learning_rate": params["learning_rate"],
+         "batch": params["batch"], "time": end - start
+         })
 
     try:
-        with open("param.csv", 'w',newline='') as csvfile:
+        with open("param.csv", 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=SavedParameters[0].keys())
             writer.writeheader()
             writer.writerows(SavedParameters)
@@ -112,22 +122,29 @@ def train_norm(param, dataset, norm):
     YTestGlobal = np.argmax(YTestGlobal, axis=1)
 
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
-    optimizable_variable = {"filter": hp.choice("filter", np.arange(2, 10 + 1)),
-                            "kernel": hp.choice("kernel", np.arange(2, 16 + 1)),
-                            "filter2": hp.choice("filter2", np.arange(4, 30 + 1)),
-                            "learning_rate": hp.uniform("learning_rate", 1e-5, 1e-1),
-                            "momentum": hp.uniform("momentum", 0.8, 0.95)}
+    optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 16 + 1)),
+                            "batch": hp.choice("batch", [64, 128, 256, 512]),
+                            "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01)}
 
     trials = Trials()
     global SavedParameters
-    # with open('dataset/CICDS2017/param/param.json') as json_file:
-    #     SavedParameters = json.load(json_file)
+    SavedParameters150 = []
+    # with open('param.csv') as csv_file:
+    #     SavedParameters150 = list(csv.DictReader(csv_file))
+    #
+    # for i in range(8):
+    #     param = {"kernel": int(SavedParameters150[i]["kernel"]),
+    #              "filter": int(SavedParameters150[i]["filter"]),
+    #              "filter2": int(SavedParameters150[i]["filter2"]),
+    #              "learning_rate": float(SavedParameters150[i]["learning_rate"]),
+    #              "momentum": float(SavedParameters150[i]["momentum"])
+    #              }
+    #     hyperopt_fcn(param)
+    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=20)
 
-    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=5)
-
-    print("migliori parametri")
-    SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy'], reverse=True)
-    print(SavedParameters[0])
+    # print("migliori parametri")
+    # SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy'], reverse=True)
+    # print(SavedParameters[0])
 
     # returning best model with hyperopt parameters
     model = deep_train(XGlobal, YGlobal, SavedParameters[0])
