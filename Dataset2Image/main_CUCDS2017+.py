@@ -19,37 +19,41 @@ param = {"Max_P_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio":
 
 if not param["LoadFromJson"]:
     data = {}
-    with open('dataset/UNSW/Train.csv', 'r') as file:
+    with open('dataset/CICDS2017/TrainOneCls.csv', 'r') as file:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
-        data["Classification"] = data["Xtrain"]["classification"]
-        del data["Xtrain"]["classification"]
-    with open('dataset/UNSW/Test_UNSW_NB15.csv', 'r') as file:
+        data["Classification"] = data["Xtrain"]["Classification"]
+        del data["Xtrain"]["Classification"]
+
+    with open('dataset/CICDS2017/Test.csv', 'r') as file:
         Xtest=pd.DataFrame(list(csv.DictReader(file)))
         Xtest.replace("", np.nan, inplace=True)
         Xtest.dropna(inplace=True)
         data["Xtest"]=Xtest.astype(float)
-        data["Ytest"] = data["Xtest"]["classification"]
-        del data["Xtest"]["classification"]
 
-    filename = "dataset/UNSW/param/y_trainingset.pickle"
-    f_myfile = open(filename, 'wb')
-    pickle.dump(data["Classification"], f_myfile)
-    f_myfile.close()
+        data["Ytest"] = data["Xtest"]["Classification"]
+        del data["Xtest"]["Classification"]
 
-    filename = "dataset/UNSW/param/y_testingset.pickle"
-    f_myfile = open(filename, 'wb')
-    pickle.dump(data["Ytest"], f_myfile)
-    f_myfile.close()
+    # filename = "dataset/CICDS2017/param/y_trainingset.pickle"
+    # f_myfile = open(filename, 'wb')
+    # pickle.dump(data["Classification"], f_myfile)
+    # f_myfile.close()
+    #
+    # filename = "dataset/CICDS2017/param/y_testingset.pickle"
+    # f_myfile = open(filename, 'wb')
+    # pickle.dump(data["Ytest"], f_myfile)
+    # f_myfile.close()
+    #TODO remove this line
+    # data["Ytest"] = 1
+    # data["Xtest"] = data["Xtrain"]
 
     model = DeepInsight_train_norm.train_norm(param, data, norm=False)
     model.save('dataset/CICDS2017/param/model.h5')
 
 else:
-    images={}
+    images = {}
     f_myfile = open('dataset/CICDS2017/param/trainingsetImage.pickle', 'rb')
     images["Xtrain"] = pickle.load(f_myfile)
     f_myfile.close()
-
 
     f_myfile = open('dataset/CICDS2017/param/y_trainingset.pickle', 'rb')
     images["Classification"] = pickle.load(f_myfile)
@@ -62,7 +66,6 @@ else:
     f_myfile = open('dataset/CICDS2017/param/y_testingset.pickle', 'rb')
     images["Ytest"] = pickle.load(f_myfile)
     f_myfile.close()
-
 
     # with open('dataset/CICDS2017/Test.csv', 'r') as file:
     #     Xtest=pd.DataFrame(list(csv.DictReader(file)))

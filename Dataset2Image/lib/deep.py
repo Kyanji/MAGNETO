@@ -24,15 +24,13 @@ def deep_train(images, y, param=None):
     x_train = np.reshape(x_train, [-1, image_size, image_size, 1])
     x_test = np.reshape(x_test, [-1, image_size, image_size, 1])
 
-    # num_filters = param["filter"]
-    # num_filters2 = param["filter2"]
+    num_filters = param["filter"]
+    num_filters2 = param["filter2"]
 
-    num_filters = 2
-    num_filters2 = 18
 
     kernel = param["kernel"]
 
-    inputs = Input(shape=(image_size, image_size, 1))
+    inputs = Input(shape=(image_size, x_train.shape[2], 1))
 
     out = Conv2D(filters=num_filters,
                  kernel_size=(kernel, kernel),
