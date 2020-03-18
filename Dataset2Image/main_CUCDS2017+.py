@@ -24,25 +24,25 @@ if not param["LoadFromJson"]:
         data["Classification"] = data["Xtrain"]["Classification"]
         del data["Xtrain"]["Classification"]
 
-    with open('dataset/CICDS2017/Test.csv', 'r') as file:
-        Xtest=pd.DataFrame(list(csv.DictReader(file)))
-        Xtest.replace("", np.nan, inplace=True)
-        Xtest.dropna(inplace=True)
-        data["Xtest"]=Xtest.astype(float)
+    # with open('dataset/CICDS2017/Test.csv', 'r') as file:
+    #     Xtest = pd.DataFrame(list(csv.DictReader(file)))
+    #     Xtest.replace("", np.nan, inplace=True)
+    #     Xtest.dropna(inplace=True)
+    #     data["Xtest"] = Xtest.astype(float)
+    #
+    #     data["Ytest"] = data["Xtest"]["Classification"]
+    #     del data["Xtest"]["Classification"]
 
-        data["Ytest"] = data["Xtest"]["Classification"]
-        del data["Xtest"]["Classification"]
+    data["Xtest"]=data["Xtrain"]
+    data["Ytest"]=data["Classification"]
 
-    # filename = "dataset/CICDS2017/param/y_trainingset.pickle"
-    # f_myfile = open(filename, 'wb')
-    # pickle.dump(data["Classification"], f_myfile)
-    # f_myfile.close()
+
     #
     # filename = "dataset/CICDS2017/param/y_testingset.pickle"
     # f_myfile = open(filename, 'wb')
     # pickle.dump(data["Ytest"], f_myfile)
     # f_myfile.close()
-    #TODO remove this line
+    # TODO remove this line
     # data["Ytest"] = 1
     # data["Xtest"] = data["Xtrain"]
 
@@ -51,15 +51,16 @@ if not param["LoadFromJson"]:
 
 else:
     images = {}
-    f_myfile = open('dataset/CICDS2017/param/trainingsetImage.pickle', 'rb')
+    f_myfile = open('dataset/CICDS2017/param/trainingsetImageNew10x10.pickle', 'rb')
     images["Xtrain"] = pickle.load(f_myfile)
     f_myfile.close()
 
     f_myfile = open('dataset/CICDS2017/param/y_trainingset.pickle', 'rb')
     images["Classification"] = pickle.load(f_myfile)
+    images["Classification"]=images["Classification"]
     f_myfile.close()
 
-    f_myfile = open('dataset/CICDS2017/param/testingsetImage.pickle', 'rb')
+    f_myfile = open('dataset/CICDS2017/param/testingsetImageNew10x10.pickle', 'rb')
     images["Xtest"] = pickle.load(f_myfile)
     f_myfile.close()
 
