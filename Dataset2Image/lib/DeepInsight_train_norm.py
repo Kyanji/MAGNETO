@@ -122,7 +122,7 @@ def train_norm(param, dataset, norm):
         del dataset["Xtest"]
 
         # saving testingset
-        filename = "/content/drive/My Drive/Tesi/testingsetImageNew10x10.pickle"
+        filename = "dataset/CICDS2017/param/testingsetImageNew10x10.pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(XTestGlobal, f_myfile)
         f_myfile.close()
@@ -150,7 +150,7 @@ def train_norm(param, dataset, norm):
     global SavedParameters
     SavedParameters150 = []
     fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=50)
-    # hyperopt_fcn({"kernel":2,"learning_rate":0.00838526346,"batch":128,"filter":64,"filter2":16})
+    #hyperopt_fcn({"kernel":2,"learning_rate":0.00838526346,"batch":128,"filter":64,"filter2":16})
     print("migliori parametri")
     SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_test'], reverse=True)
     print(SavedParameters[0])

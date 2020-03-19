@@ -11,7 +11,7 @@ import numpy as np
 
 # Parameters
 param = {"Max_P_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
-         "LoadFromJson": False}
+         "LoadFromJson": True}
 
 # TODO delete
 # with open('dataset/exptable.txt') as json_file:

@@ -10,8 +10,7 @@ from Dataset2Image.lib.MinRect import minimum_bounding_rectangle
 from Dataset2Image.lib.ConvPixel import ConvPixel
 import imageio
 import matplotlib.pyplot as plt
-from skimage import img_as_ubyte
-import cv2
+
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -150,7 +149,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     #     print(str(i) + "of " + str(n_sample))
     # ret = json.dump([img.tolist() for img in images])
 
-    filename = "dataset/CICDS2017/param/trainingsetImage.pickle"
+    filename = "dataset/CICDS2017/param/trainingsetImageNew10x10.pickle"
     f_myfile = open(filename, 'wb')
     pickle.dump(images, f_myfile)
     f_myfile.close()
