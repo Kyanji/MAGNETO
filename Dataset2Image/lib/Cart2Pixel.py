@@ -8,10 +8,9 @@ from sklearn.feature_selection import mutual_info_classif
 from sklearn.manifold import TSNE
 from Dataset2Image.lib.MinRect import minimum_bounding_rectangle
 from Dataset2Image.lib.ConvPixel import ConvPixel
+import matplotlib.pyplot as plt
 import imageio
-import matplotlib.pyplot as plt
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -40,7 +39,7 @@ def dataset_with_best_duplicates(X, y, zp):
         toDelete.extend(list(dup[index]))
     X = np.delete(X, toDelete, axis=1)
     zp = np.delete(zp, toDelete, axis=1)
-    return X.transpose(), zp , toDelete
+    return X.transpose(), zp, toDelete
 
 
 def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
@@ -56,7 +55,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
         pca = PCA(n_components=2)
         Y = pca.fit_transform(df)
     elif Q["method"] == 'tSNE':
-        tsne = TSNE(n_components=2, method="exact", )
+        tsne = TSNE(n_components=2, method="exact")
         Y = tsne.fit_transform(df)
     elif Q["method"] == 'kpca':
         kpca = KernelPCA(n_components=2, kernel='linear')
@@ -79,9 +78,13 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
 
     coord = np.array([x, y])
     rotatedData = np.array(R.dot(coord))  # Z
-    # plt.scatter(rotatedData[0, :], rotatedData[1:])
-    # plt.axis('square')
 
+    rotatedData=np.delete(rotatedData, 59,1)
+    Q["data"] = np.delete(Q["data"], 59, axis=0)
+    n=n-1
+    plt.scatter(rotatedData[0, :], rotatedData[1:])
+    plt.axis('square')
+    plt.show()
     # find duplicate
     for i in range(len(rotatedData[0, :])):
         for j in range(i + 1, len(rotatedData[0])):
@@ -118,21 +121,38 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
             A = math.ceil(rec_x_axis * precision / dmin)
             B = math.ceil(rec_y_axis * precision / dmin)
     # cartesian coordinates to pixels
-    xp = np.round(
-        1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
-    yp = np.round(
-        1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
-    A = max(xp)
-    B = max(yp)
+    tot = []
+    for i_1 in range(10, 100):
+        A = i_1
+        B = i_1
+        xp = np.round(
+            1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
+        yp = np.round(
+            1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
+        zp = np.array([xp, yp])
+        A = max(xp)
+        B = max(yp)
 
-    images = []
+        dup = {}
+        for i in range(len(zp[0, :])):
+            for j in range(i + 1, len(zp[0])):
+                if int(zp[0, i]) == int(zp[0, j]) and int(zp[1, i]) == int(zp[1, j]):
+                    dup.setdefault(str(zp[0, i]) + "-" + str(zp[1, i]), {i}).add(j)
 
+        # print("Collisioni:" + str(len(dup.keys())))
+        # print(dup.keys())
+        sum = 0
+        for ind in dup.keys():
+            sum = sum + len(dup[ind])
+        print(sum)
+        tot.append([A, sum])
     # Save Model to JSON file
 
+    zp = np.array([xp, yp])
 
-    Q["data"], zp , toDelete = dataset_with_best_duplicates(Q["data"], Q["y"], np.array([xp, yp]))
+    toDelete = 0
+    #       Q["data"], zp , toDelete = dataset_with_best_duplicates(Q["data"], Q["y"], np.array([xp, yp]))
     images = []
-    # plt.clf()
 
     # Training set
     # for i in range(0, 700):
@@ -140,7 +160,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     #     plt.imshow(a, cmap="gray")
     #     plt.show()
 
-    images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B) for i in range(0, 700)]
+    images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, 3)]
 
     # images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B))
     # filename = "dataset/CICDS2017/images/img" + str(i) + ".jpg"
@@ -148,8 +168,8 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     # if i % 10000 == 0:
     #     print(str(i) + "of " + str(n_sample))
     # ret = json.dump([img.tolist() for img in images])
-
-    filename = "dataset/CICDS2017/param/trainingsetImageNew10x10.pickle"
+    # TODO
+    filename = "dataset/UNSW/trainDynamic.pickle"
     f_myfile = open(filename, 'wb')
     pickle.dump(images, f_myfile)
     f_myfile.close()

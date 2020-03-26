@@ -13,7 +13,6 @@ from sklearn.metrics import confusion_matrix, balanced_accuracy_score
 from Dataset2Image.lib.Cart2Pixel import Cart2Pixel
 from Dataset2Image.lib.ConvPixel import ConvPixel
 from Dataset2Image.lib.deep import deep_train
-from Dataset2Image.lib.Cart2Pixel import delete_duplicate_features
 
 import time
 
@@ -27,14 +26,10 @@ SavedParameters = []
 
 
 def hyperopt_fcn(params):
-    if (params["filter"] == params["filter2"]):
+    if params["filter"] == params["filter2"]:
         return {'loss': np.inf, 'status': STATUS_OK}
     global SavedParameters
     start_time = time.time()
-    # for p in SavedParameters:
-    #     if p["filter"] == params["filter"] and p["filter2"] == params["filter2"] and p["kernel"] == params["kernel"] and\
-    #             p["learning_rate"] == params["learning_rate"] and p["momentum"] == params["momentum"]:
-    #         return {'loss': np.inf, 'status': STATUS_OK}
     print("start train")
     model, val = deep_train(XGlobal, YGlobal, params)
     print("start predict")
@@ -51,7 +46,10 @@ def hyperopt_fcn(params):
     #      "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "filter": params["filter"], "filter2": params["filter2"],
     #      "kernel": params["kernel"], "learning_rate": params["learning_rate"], "momentum": params["momentum"]})
     SavedParameters.append(val)
-
+    # SavedParameters[-1].update(  {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) *
+    # 100, "TN_test": cf[0][0], "FP_test": cf[0][1], "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params[
+    # "kernel"], "learning_rate": params["learning_rate"], "batch": params["batch"], "filter1":params["filter"],
+    # "filter2":params["filter2"], "time":time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
     SavedParameters[-1].update(
         {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN_test": cf[0][0],
          "FP_test": cf[0][1], "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params["kernel"],
@@ -63,7 +61,7 @@ def hyperopt_fcn(params):
     SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_test'], reverse=True)
 
     try:
-        with open("/content/drive/My Drive/Tesi/Risultati/resNew10x10.csv", 'w', newline='') as csvfile:
+        with open("dataset/UNSW/resDynamic.csv", 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=SavedParameters[0].keys())
             writer.writeheader()
             writer.writerows(SavedParameters)
@@ -106,7 +104,8 @@ def train_norm(param, dataset, norm):
         print(q["max_px_size"])
 
         # generate images
-        XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_px_size"], q["max_px_size"], param["Dynamic_Size"])
+        XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_px_size"],q["max_px_size"], param["Dynamic_Size"])
+        del XGlobal
         del q
         print("Train Images done!")
         # generate testingset image
@@ -116,13 +115,14 @@ def train_norm(param, dataset, norm):
         print("generating Test Images")
         print(dataset["Xtest"].shape)
         XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
-                                 image_model["A"], image_model["B"]) for i in range(0, 700)]#dataset["Xtest"].shape[1])]
+                                 image_model["A"], image_model["B"]) for i in
+                       range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
         print("Test Images done!")
 
         del dataset["Xtest"]
 
         # saving testingset
-        filename = "dataset/CICDS2017/param/testingsetImageNew10x10.pickle"
+        filename = "dataset/UNSW/testingsetImagDynamic.pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(XTestGlobal, f_myfile)
         f_myfile.close()
@@ -132,25 +132,36 @@ def train_norm(param, dataset, norm):
         XTestGlobal = dataset["Xtest"]
     del dataset["Xtrain"]
     del dataset["Xtest"]
-
-    XTestGlobal = np.array(XTestGlobal)
-    image_size = XTestGlobal.shape[1]
-    print("shape" + str(XTestGlobal.shape))
-    XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
+    del XTestGlobal
+    #XTestGlobal = np.array(XTestGlobal)
+    #image_size = XTestGlobal.shape[1]
+    #print("shape" + str(XTestGlobal.shape))
+    #XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
     YTestGlobal = np.argmax(YTestGlobal, axis=1)
 
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
+
+
+    optimizable_variable = {
+        "filter": hp.choice("filter", [16, 32, 64, 128]),
+        "filter2": hp.choice("filter2", [16, 32, 64, 128]),
+        "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
+        'dropout1': hp.uniform("dropout1", 0, 1),
+        'dropout2': hp.uniform("dropout2", 0, 1),
+        "learning_rate": hp.uniform("learning_rate", 1e-4, 1e-1)
+    }
+
     optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
                             "filter": hp.choice("filter", [16, 32, 64, 128]),
                             "filter2": hp.choice("filter2", [16, 32, 64, 128]),
-                            "batch": hp.choice("batch", [64, 128, 256, 512]),
+                            "batch": hp.choice("batch", [32]),
                             "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01)}
 
     trials = Trials()
     global SavedParameters
     SavedParameters150 = []
     fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=50)
-    #hyperopt_fcn({"kernel":2,"learning_rate":0.00838526346,"batch":128,"filter":64,"filter2":16})
+    # hyperopt_fcn({"kernel":2,"learning_rate":0.00838526346,"batch":128,"filter":64,"filter2":16})
     print("migliori parametri")
     SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_test'], reverse=True)
     print(SavedParameters[0])

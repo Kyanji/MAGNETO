@@ -2,7 +2,7 @@ import json
 import os
 import pickle
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pandas as pd
 import csv
@@ -57,7 +57,6 @@ else:
 
     f_myfile = open('dataset/CICDS2017/param/y_trainingset.pickle', 'rb')
     images["Classification"] = pickle.load(f_myfile)
-    images["Classification"]=images["Classification"]
     f_myfile.close()
 
     f_myfile = open('dataset/CICDS2017/param/testingsetImageNew10x10.pickle', 'rb')
