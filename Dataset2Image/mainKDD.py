@@ -23,14 +23,15 @@ if not param["LoadFromJson"]:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
         data["Classification"] = data["Xtrain"][' classification.']
         del data["Xtrain"][' classification.']
-    with open('dataset/KDD/Test.csv', 'r') as file:
-        Xtest = pd.DataFrame(list(csv.DictReader(file)))
-        Xtest.replace("", np.nan, inplace=True)
-        Xtest.dropna(inplace=True)
-        data["Xtest"] = Xtest.astype(float)
-        data["Ytest"] = data["Xtest"][' classification.']
-        del data["Xtest"][' classification.']
-
+    # with open('dataset/KDD/Test.csv', 'r') as file:
+    #     Xtest = pd.DataFrame(list(csv.DictReader(file)))
+    #     Xtest.replace("", np.nan, inplace=True)
+    #     Xtest.dropna(inplace=True)
+    #     data["Xtest"] = Xtest.astype(float)
+    #     data["Ytest"] = data["Xtest"][' classification.']
+    #     del data["Xtest"][' classification.']
+    data["Xtest"]=1
+    data["Ytest"]=1
 
 
     model = DeepInsight_train_norm.train_norm(param, data, norm=False)

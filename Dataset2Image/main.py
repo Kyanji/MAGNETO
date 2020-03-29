@@ -10,8 +10,8 @@ from Dataset2Image.lib import DeepInsight_train_norm
 import numpy as np
 
 # Parameters
-param = {"Max_P_Size": 300, "Dynamic_Size": True, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
-         "LoadFromJson": True}
+param = {"Max_A_Size": 200, "Max_B_Size": 13, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
+         "LoadFromJson": False, "mutual_info":True}
 
 # TODO delete
 # with open('dataset/exptable.txt') as json_file:
@@ -23,23 +23,17 @@ if not param["LoadFromJson"]:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
         data["Classification"] = data["Xtrain"]["classification"]
         del data["Xtrain"]["classification"]
-    with open('dataset/UNSW/Test_UNSW_NB15.csv', 'r') as file:
-        Xtest = pd.DataFrame(list(csv.DictReader(file)))
-        Xtest.replace("", np.nan, inplace=True)
-        Xtest.dropna(inplace=True)
-        data["Xtest"] = Xtest.astype(float)
-        data["Ytest"] = data["Xtest"]["classification"]
-        del data["Xtest"]["classification"]
+    # with open('dataset/UNSW/Test_UNSW_NB15.csv', 'r') as file:
+    # Xtest = pd.DataFrame(list(csv.DictReader(file)))
+    # Xtest.replace("", np.nan, inplace=True)
+    # Xtest.dropna(inplace=True)
+    # data["Xtest"] = Xtest.astype(float)
+    # data["Ytest"] = data["Xtest"]["classification"]
+    # del data["Xtest"]["classification"]
+    data["Ytest"] = 1
+    data["Xtest"] = 1
 
-    f_myfile = open("dataset/UNSW/y_train.pickle", 'wb')
-    pickle.dump(data["Classification"],f_myfile)
-    f_myfile.close()
-
-    f_myfile = open("dataset/UNSW/y_test.pickle", 'wb')
-    pickle.dump(data["Ytest"],f_myfile)
-    f_myfile.close()
-
-
+    #data["Xtrain"]=data["Xtrain"].drop(columns=data["Xtrain"].keys()[125])
     model = DeepInsight_train_norm.train_norm(param, data, norm=False)
     model.save('dataset/CICDS2017/param/model.h5')
 

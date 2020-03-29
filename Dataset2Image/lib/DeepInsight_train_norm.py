@@ -99,12 +99,14 @@ def train_norm(param, dataset, norm):
         print("trasposing")
 
         q = {"data": np.array(dataset["Xtrain"].values).transpose(), "method": param["Metod"],
-             "max_px_size": param["Max_P_Size"], "y": np.argmax(YGlobal, axis=1)}
+             "max_A_size": param["Max_A_Size"], "max_B_size": param["Max_B_Size"], "y": np.argmax(YGlobal, axis=1)}
         print(q["method"])
-        print(q["max_px_size"])
+        print(q["max_A_size"])
+        print(q["max_B_size"])
 
         # generate images
-        XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_px_size"],q["max_px_size"], param["Dynamic_Size"])
+        XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_A_size"], q["max_B_size"], param["Dynamic_Size"],
+                                                    mutual_info=param["mutual_info"], only_model=True)
         del XGlobal
         del q
         print("Train Images done!")
@@ -133,14 +135,13 @@ def train_norm(param, dataset, norm):
     del dataset["Xtrain"]
     del dataset["Xtest"]
     del XTestGlobal
-    #XTestGlobal = np.array(XTestGlobal)
-    #image_size = XTestGlobal.shape[1]
-    #print("shape" + str(XTestGlobal.shape))
-    #XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
+    # XTestGlobal = np.array(XTestGlobal)
+    # image_size = XTestGlobal.shape[1]
+    # print("shape" + str(XTestGlobal.shape))
+    # XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
     YTestGlobal = np.argmax(YTestGlobal, axis=1)
 
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
-
 
     optimizable_variable = {
         "filter": hp.choice("filter", [16, 32, 64, 128]),

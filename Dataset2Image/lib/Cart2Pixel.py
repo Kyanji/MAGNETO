@@ -8,6 +8,7 @@ from sklearn.feature_selection import mutual_info_classif
 from sklearn.manifold import TSNE
 from Dataset2Image.lib.MinRect import minimum_bounding_rectangle
 from Dataset2Image.lib.ConvPixel import ConvPixel
+import plotly.express as px
 import matplotlib.pyplot as plt
 import imageio
 
@@ -42,7 +43,13 @@ def dataset_with_best_duplicates(X, y, zp):
     return X.transpose(), zp, toDelete
 
 
-def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
+def onclick(event):
+    print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+          ('double' if event.dblclick else 'single', event.button,
+           event.x, event.y, event.xdata, event.ydata))
+
+
+def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, only_model=False):
     # TODO controls on input
     if A is not None:
         A = A - 1
@@ -79,12 +86,17 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
     coord = np.array([x, y])
     rotatedData = np.array(R.dot(coord))  # Z
 
-    rotatedData=np.delete(rotatedData, 59,1)
-    Q["data"] = np.delete(Q["data"], 59, axis=0)
-    n=n-1
+    rotatedData = np.delete(rotatedData, [125], 1)
+    # rotatedData=np.delete(rotatedData, [175],1)
+    # rotatedData=np.delete(rotatedData, [184],1)
+    Q["data"] = np.delete(Q["data"], [125], axis=0)
+    # Q["data"] = np.delete(Q["data"], [175], axis=0)
+    # Q["data"] = np.delete(Q["data"], [184], axis=0)
+    n = n - 1
     plt.scatter(rotatedData[0, :], rotatedData[1:])
     plt.axis('square')
-    plt.show()
+    plt.show(block=False)
+
     # find duplicate
     for i in range(len(rotatedData[0, :])):
         for j in range(i + 1, len(rotatedData[0])):
@@ -116,63 +128,51 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False):
         A = math.ceil(rec_x_axis * precision_old / dmin)
         B = math.ceil(rec_y_axis * precision_old / dmin)
         print("Dynamic [A:" + str(A) + " ; B:" + str(B) + "]")
-        if max([A, B]) > Q["max_px_size"]:
-            precision = precision_old * Q["max_px_size"] / max([A, B])
+        if A > Q["max_A_size"] or B > Q["max_B_size"]:
+            # precision = precision_old * Q["max_px_size"] / max([A, B])
+            precision = precision_old * (Q["max_A_size"] / A) * (Q["max_B_size"] / B)
             A = math.ceil(rec_x_axis * precision / dmin)
             B = math.ceil(rec_y_axis * precision / dmin)
     # cartesian coordinates to pixels
     tot = []
-    for i_1 in range(10, 100):
-        A = i_1
-        B = i_1
-        xp = np.round(
-            1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
-        yp = np.round(
-            1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
-        zp = np.array([xp, yp])
-        A = max(xp)
-        B = max(yp)
 
-        dup = {}
-        for i in range(len(zp[0, :])):
-            for j in range(i + 1, len(zp[0])):
-                if int(zp[0, i]) == int(zp[0, j]) and int(zp[1, i]) == int(zp[1, j]):
-                    dup.setdefault(str(zp[0, i]) + "-" + str(zp[1, i]), {i}).add(j)
-
-        # print("Collisioni:" + str(len(dup.keys())))
-        # print(dup.keys())
-        sum = 0
-        for ind in dup.keys():
-            sum = sum + len(dup[ind])
-        print(sum)
-        tot.append([A, sum])
-    # Save Model to JSON file
-
+    xp = np.round(
+        1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
+    yp = np.round(
+        1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
     zp = np.array([xp, yp])
+    A = max(xp)
+    B = max(yp)
 
-    toDelete = 0
-    #       Q["data"], zp , toDelete = dataset_with_best_duplicates(Q["data"], Q["y"], np.array([xp, yp]))
+    # find duplicates
+    dup = {}
+    for i in range(len(zp[0, :])):
+        for j in range(i + 1, len(zp[0])):
+            if int(zp[0, i]) == int(zp[0, j]) and int(zp[1, i]) == int(zp[1, j]):
+                dup.setdefault(str(zp[0, i]) + "-" + str(zp[1, i]), {i}).add(j)
+    sum = 0
+    for ind in dup.keys():
+        sum = sum + (len(dup[ind]) - 1)
+    print("Collisioni: " + str(sum))
+
+
     images = []
+    toDelete = 0
 
+    if mutual_info:
+        Q["data"], zp, toDelete = dataset_with_best_duplicates(Q["data"], Q["y"], zp)
     # Training set
-    # for i in range(0, 700):
-    #     a = ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B)
-    #     plt.imshow(a, cmap="gray")
-    #     plt.show()
 
-    images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, 3)]
-
-    # images.append(ConvPixel(Q["data"][:, i], xp, yp, A, B))
-    # filename = "dataset/CICDS2017/images/img" + str(i) + ".jpg"
-    # cv2.imwrite(filename, images[i])
-    # if i % 10000 == 0:
-    #     print(str(i) + "of " + str(n_sample))
-    # ret = json.dump([img.tolist() for img in images])
-    # TODO
-    filename = "dataset/UNSW/trainDynamic.pickle"
-    f_myfile = open(filename, 'wb')
-    pickle.dump(images, f_myfile)
-    f_myfile.close()
+    if only_model:
+        a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
+        plt.imshow(a, cmap="gray")
+        plt.show()
+    else:
+        images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, 3)]
+        filename = "dataset/UNSW/trainDynamic.pickle"
+        f_myfile = open(filename, 'wb')
+        pickle.dump(images, f_myfile)
+        f_myfile.close()
 
     image_model = {"xp": zp[0].tolist(), "yp": zp[1].tolist(), "A": A, "B": B}
     j = json.dumps(image_model)
