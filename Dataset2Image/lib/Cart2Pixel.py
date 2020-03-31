@@ -15,9 +15,16 @@ import imageio
 import numpy as np
 
 
-def delete_duplicate_features(X, toDelete):
-    X = np.delete(X, toDelete, axis=1)
-    return X
+def find_duplicate(zp):
+    dup = {}
+    for i in range(len(zp[0, :])):
+        for j in range(i + 1, len(zp[0])):
+            if int(zp[0, i]) == int(zp[0, j]) and int(zp[1, i]) == int(zp[1, j]):
+                dup.setdefault(str(zp[0, i]) + "-" + str(zp[1, i]), {i}).add(j)
+    sum = 0
+    for ind in dup.keys():
+        sum = sum + (len(dup[ind]) - 1)
+    return sum
 
 
 def dataset_with_best_duplicates(X, y, zp):
@@ -43,13 +50,7 @@ def dataset_with_best_duplicates(X, y, zp):
     return X.transpose(), zp, toDelete
 
 
-def onclick(event):
-    print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
-          ('double' if event.dblclick else 'single', event.button,
-           event.x, event.y, event.xdata, event.ydata))
-
-
-def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, only_model=False):
+def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, only_model=False, params=None):
     # TODO controls on input
     if A is not None:
         A = A - 1
@@ -86,13 +87,13 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     coord = np.array([x, y])
     rotatedData = np.array(R.dot(coord))  # Z
 
-    rotatedData = np.delete(rotatedData, [125], 1)
+    # rotatedData = np.delete(rotatedData, [125], 1)
     # rotatedData=np.delete(rotatedData, [175],1)
     # rotatedData=np.delete(rotatedData, [184],1)
-    Q["data"] = np.delete(Q["data"], [125], axis=0)
+    # Q["data"] = np.delete(Q["data"], [125], axis=0)
     # Q["data"] = np.delete(Q["data"], [175], axis=0)
     # Q["data"] = np.delete(Q["data"], [184], axis=0)
-    n = n - 1
+    # n = n - 3
     plt.scatter(rotatedData[0, :], rotatedData[1:])
     plt.axis('square')
     plt.show(block=False)
@@ -135,7 +136,6 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
             B = math.ceil(rec_y_axis * precision / dmin)
     # cartesian coordinates to pixels
     tot = []
-
     xp = np.round(
         1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
     yp = np.round(
@@ -145,38 +145,39 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     B = max(yp)
 
     # find duplicates
-    dup = {}
-    for i in range(len(zp[0, :])):
-        for j in range(i + 1, len(zp[0])):
-            if int(zp[0, i]) == int(zp[0, j]) and int(zp[1, i]) == int(zp[1, j]):
-                dup.setdefault(str(zp[0, i]) + "-" + str(zp[1, i]), {i}).add(j)
-    sum = 0
-    for ind in dup.keys():
-        sum = sum + (len(dup[ind]) - 1)
-    print("Collisioni: " + str(sum))
+    print("Collisioni: " + str(find_duplicate(zp)))
 
+    # a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
+    # plt.imshow(a, cmap="gray")
+    # plt.savefig(str(A)+'.png')
+    # plt.show()
+
+    # Training set
 
     images = []
     toDelete = 0
-
+    name = "_" + str(int(A)) + 'x' + str(int(B))
+    if params["No_0_MI"]:
+        name = name + "_No_0_MI"
     if mutual_info:
         Q["data"], zp, toDelete = dataset_with_best_duplicates(Q["data"], Q["y"], zp)
-    # Training set
-
+        name = name + "_MI"
+    else:
+        name = name + "_Mean"
     if only_model:
         a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
         plt.imshow(a, cmap="gray")
         plt.show()
     else:
-        images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, 3)]
-        filename = "dataset/UNSW/trainDynamic.pickle"
+        images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, n_sample)]
+        filename = params["dir"] + "train" + name + ".pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(images, f_myfile)
         f_myfile.close()
 
     image_model = {"xp": zp[0].tolist(), "yp": zp[1].tolist(), "A": A, "B": B}
     j = json.dumps(image_model)
-    f = open("dataset/CICDS2017/param/image_model.json", "w")
+    f = open(params["dir"] + name + "model.json", "w")
     f.write(j)
     f.close()
 

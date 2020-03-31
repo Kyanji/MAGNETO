@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix, balanced_accuracy_score
 
 from Dataset2Image.lib.Cart2Pixel import Cart2Pixel
 from Dataset2Image.lib.ConvPixel import ConvPixel
-from Dataset2Image.lib.deep import deep_train
+from Dataset2Image.lib.deep import CNN_Nature, CNN2
 
 import time
 
@@ -23,6 +23,8 @@ XTestGlobal = []
 YTestGlobal = []
 
 SavedParameters = []
+Mode = ""
+Name = ""
 
 
 def hyperopt_fcn(params):
@@ -31,7 +33,10 @@ def hyperopt_fcn(params):
     global SavedParameters
     start_time = time.time()
     print("start train")
-    model, val = deep_train(XGlobal, YGlobal, params)
+    if Mode == "CNN_Nature":
+        model, val = CNN_Nature(XGlobal, YGlobal, params)
+    elif Mode == "CNN2":
+        model, val = CNN2(XGlobal, YGlobal, params)
     print("start predict")
 
     Y_predicted = model.predict(XTestGlobal, verbose=0, use_multiprocessing=True, workers=12)
@@ -46,22 +51,27 @@ def hyperopt_fcn(params):
     #      "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "filter": params["filter"], "filter2": params["filter2"],
     #      "kernel": params["kernel"], "learning_rate": params["learning_rate"], "momentum": params["momentum"]})
     SavedParameters.append(val)
-    # SavedParameters[-1].update(  {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) *
-    # 100, "TN_test": cf[0][0], "FP_test": cf[0][1], "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params[
-    # "kernel"], "learning_rate": params["learning_rate"], "batch": params["batch"], "filter1":params["filter"],
-    # "filter2":params["filter2"], "time":time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
-    SavedParameters[-1].update(
-        {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN_test": cf[0][0],
-         "FP_test": cf[0][1], "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params["kernel"],
-         "learning_rate": params["learning_rate"],
-         "batch": params["batch"],
-         "filter1": params["filter"],
-         "filter2": params["filter2"],
-         "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
+    if Mode == "CNN_Nature":
+        SavedParameters[-1].update({"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) *
+                                                              100, "TN_test": cf[0][0], "FP_test": cf[0][1],
+                                    "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params[
+                "kernel"], "learning_rate": params["learning_rate"], "batch": params["batch"],
+                                    "filter1": params["filter"],
+                                    "filter2": params["filter2"],
+                                    "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
+    elif Mode == "CNN2":
+        SavedParameters[-1].update(
+            {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN_test": cf[0][0],
+             "FP_test": cf[0][1], "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params["kernel"],
+             "learning_rate": params["learning_rate"],
+             "batch": params["batch"],
+             "filter1": params["filter"],
+             "filter2": params["filter2"],
+             "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
     SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_test'], reverse=True)
 
     try:
-        with open("dataset/UNSW/resDynamic.csv", 'w', newline='') as csvfile:
+        with open(Name, 'w', newline='') as csvfile:
             writer = csv.DictWriter(csvfile, fieldnames=SavedParameters[0].keys())
             writer.writeheader()
             writer.writerows(SavedParameters)
@@ -106,12 +116,13 @@ def train_norm(param, dataset, norm):
 
         # generate images
         XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_A_size"], q["max_B_size"], param["Dynamic_Size"],
-                                                    mutual_info=param["mutual_info"], only_model=True)
-        del XGlobal
-        del q
+                                                    mutual_info=param["mutual_info"],  params=param)
+
+        del q["data"]
         print("Train Images done!")
         # generate testingset image
-        dataset["Xtest"] = dataset["Xtest"].drop(dataset["Xtest"].columns[toDelete], axis=1)
+        if param["mutual_info"]:
+            dataset["Xtest"] = dataset["Xtest"].drop(dataset["Xtest"].columns[toDelete], axis=1)
 
         dataset["Xtest"] = np.array(dataset["Xtest"]).transpose()
         print("generating Test Images")
@@ -121,53 +132,61 @@ def train_norm(param, dataset, norm):
                        range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
         print("Test Images done!")
 
-        del dataset["Xtest"]
-
         # saving testingset
-        filename = "dataset/UNSW/testingsetImagDynamic.pickle"
+        name = "_" + str(int(q["max_A_size"])) + "x" + str(int(q["max_B_size"]))
+        if param["No_0_MI"]:
+            name = name + "_No_0_MI"
+        if param["mutual_info"]:
+            name = name + "_MI"
+        else:
+            name = name + "_Mean"
+        filename = param["dir"] + "test" + name + ".pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(XTestGlobal, f_myfile)
         f_myfile.close()
-
     else:
         XGlobal = dataset["Xtrain"]
         XTestGlobal = dataset["Xtest"]
     del dataset["Xtrain"]
     del dataset["Xtest"]
-    del XTestGlobal
-    # XTestGlobal = np.array(XTestGlobal)
-    # image_size = XTestGlobal.shape[1]
-    # print("shape" + str(XTestGlobal.shape))
-    # XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
+    XTestGlobal = np.array(XTestGlobal)
+    image_size = XTestGlobal.shape[1]
+    print("shape" + str(XTestGlobal.shape))
+    XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
     YTestGlobal = np.argmax(YTestGlobal, axis=1)
 
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
 
-    optimizable_variable = {
-        "filter": hp.choice("filter", [16, 32, 64, 128]),
-        "filter2": hp.choice("filter2", [16, 32, 64, 128]),
-        "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
-        'dropout1': hp.uniform("dropout1", 0, 1),
-        'dropout2': hp.uniform("dropout2", 0, 1),
-        "learning_rate": hp.uniform("learning_rate", 1e-4, 1e-1)
-    }
+    if param["Mode"] == "CNN_Nature":
+        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
+                                "filter": hp.choice("filter", [16, 32, 64, 128]),
+                                "filter2": hp.choice("filter2", [16, 32, 64, 128]),
+                                "batch": hp.choice("batch", [32]),
+                                "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
+                                "epoch": param["epoch"]}
+    elif param["Mode"] == "CNN2":
+        optimizable_variable = {
+            "filter": hp.choice("filter", [16, 32, 64, 128]),
+            "filter2": hp.choice("filter2", [16, 32, 64, 128]),
+            "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
+            'dropout1': hp.uniform("dropout1", 0, 1),
+            'dropout2': hp.uniform("dropout2", 0, 1),
+            "learning_rate": hp.uniform("learning_rate", 1e-4, 1e-1),
+            "epoch": param["epoch"]}
+    global Mode
+    Mode = param["Mode"]
 
-    optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
-                            "filter": hp.choice("filter", [16, 32, 64, 128]),
-                            "filter2": hp.choice("filter2", [16, 32, 64, 128]),
-                            "batch": hp.choice("batch", [32]),
-                            "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01)}
-
+    global Name
+    Name = param["dir"] + "res_" + str(int(param["Max_A_Size"])) + "x" + str(int(param["Max_B_Size"]))
+    if param["No_0_MI"]:
+        Name = Name + "_No_0_MI"
+    if param["mutual_info"]:
+        Name = Name + "_MI"
+    else:
+        Name = Name + "_Mean"
+    Name = Name + "_" + Mode + ".csv"
     trials = Trials()
-    global SavedParameters
-    SavedParameters150 = []
-    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=50)
-    # hyperopt_fcn({"kernel":2,"learning_rate":0.00838526346,"batch":128,"filter":64,"filter2":16})
-    print("migliori parametri")
-    SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_test'], reverse=True)
-    print(SavedParameters[0])
+    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=param["hyper_opt_evals"])
 
-    # returning best model with hyperopt parameters
-    model = deep_train(XGlobal, YGlobal, SavedParameters[0])
-    print("accuracy" + str(model))
-    return model
+    print("done")
+    return 1

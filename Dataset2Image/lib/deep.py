@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, balanced_accuracy_score
 from sklearn.model_selection import train_test_split
 
 
-def deep_train(images, y, param=None):
+def CNN_Nature(images, y, param=None):
     print(param)
     x_train, x_test, y_train, y_test = train_test_split(images,
                                                         y,
@@ -96,7 +96,7 @@ def deep_train(images, y, param=None):
     hist = model.fit(
         x_train,
         y_train,
-        epochs=40,
+        epochs=param["epoch"],
         verbose=2,
         validation_data=(x_test, y_test),
         batch_size=param["batch"],
@@ -118,7 +118,7 @@ def deep_train(images, y, param=None):
                    }
 
 
-def deep_train_alternative(images, y, params=None):
+def CNN2(images, y, params=None):
     print(params)
     x_train, x_test, y_train, y_test = train_test_split(images,
                                                         y,
@@ -161,7 +161,7 @@ def deep_train_alternative(images, y, params=None):
     hist = model.fit(
         x_train,
         y_train,
-        epochs=150,
+        epochs=params["epoch"],
         verbose=2,
         validation_data=(x_test, y_test),
         batch_size=params["batch"],

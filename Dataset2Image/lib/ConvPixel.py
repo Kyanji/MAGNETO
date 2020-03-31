@@ -6,6 +6,7 @@ def ConvPixel(FVec, xp, yp, A, B, base=1, index=0):
     n = len(FVec)
     M = np.ones([int(A), int(B)]) * base
     for j in range(0, n):
+        # M[int(xp[j]) - 1, int(yp[j]) - 1] = 0
         M[int(xp[j]) - 1, int(yp[j]) - 1] = FVec[j]
     zp = np.array([xp, yp])
 
@@ -18,7 +19,7 @@ def ConvPixel(FVec, xp, yp, A, B, base=1, index=0):
     # zp[:, 11] = zp[:, 6]
 
     dup = {}
-    #find duplicate
+    # find duplicate
     for i in range(len(zp[0, :])):
         for j in range(i + 1, len(zp[0])):
             if int(zp[0, i]) == int(zp[0, j]) and int(zp[1, i]) == int(zp[1, j]):
@@ -27,10 +28,10 @@ def ConvPixel(FVec, xp, yp, A, B, base=1, index=0):
                 # dup.add(i)
                 # dup[i].add(j)
                 dup.setdefault(str(zp[0, i]) + "-" + str(zp[1, i]), {i}).add(j)
-                #print("Collisione")
+                # print("Collisione")
 
-    #print("Collisioni:")
-    #print(dup.keys())
+    # print("Collisioni:")
+    # print(dup.keys())
 
     for index in dup.keys():
         x, y = index.split("-")
