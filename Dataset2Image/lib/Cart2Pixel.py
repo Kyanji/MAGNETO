@@ -49,6 +49,29 @@ def dataset_with_best_duplicates(X, y, zp):
     zp = np.delete(zp, toDelete, axis=1)
     return X.transpose(), zp, toDelete
 
+def count_model_col(rotatedData,Q,r1,r2):
+    tot = []
+    for f in range(r1-1, r2):
+        A = f
+        B = f
+        xp = np.round(
+            1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
+        yp = np.round(
+            1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
+        zp = np.array([xp, yp])
+        A = max(xp)
+        B = max(yp)
+
+        # find duplicates
+        sum=str(find_duplicate(zp))
+        print("Collisioni: " + sum)
+        tot.append([A,sum])
+        a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
+        plt.imshow(a, cmap="gray")
+        plt.savefig(str(A)+'.png')
+        plt.show()
+    pd.DataFrame(tot).to_csv("Collision_autoencoder.csv")
+
 
 def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, only_model=False, params=None):
     # TODO controls on input
@@ -123,6 +146,8 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     dmin = np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
     rec_x_axis = abs(zrect[0, 0] - zrect[1, 0])
     rec_y_axis = abs(zrect[1, 1] - zrect[2, 1])
+
+    #count_model_col(rotatedData,Q,5,20)
 
     if dynamic_size:
         precision_old = math.sqrt(2)

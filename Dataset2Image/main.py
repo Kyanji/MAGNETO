@@ -2,6 +2,9 @@ import json
 import os
 import pickle
 
+from keras import Model
+from keras.engine.saving import load_model
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pandas as pd
@@ -11,10 +14,11 @@ import numpy as np
 from sklearn.feature_selection import mutual_info_classif
 
 # Parameters
-param = {"Max_A_Size": 15, "Max_B_Size": 15, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
+param = {"Max_A_Size": 8, "Max_B_Size": 8, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
          "dir": "dataset/UNSW/", "Mode": "CNN_Nature",  # Mode : CNN_Nature, CNN2
          "LoadFromJson": True, "mutual_info": False,
-         "hyper_opt_evals": 50, "epoch": 3, "No_0_MI": True  # True -> Removing 0 MI Features
+         "hyper_opt_evals": 50, "epoch": 1, "No_0_MI": False,  # True -> Removing 0 MI Features
+         "autoencoder": True
          }
 
 # TODO delete
@@ -27,7 +31,7 @@ if not param["LoadFromJson"]:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
         data["Classification"] = data["Xtrain"]["classification"]
         del data["Xtrain"]["classification"]
-    with open(param["dir"]+'Test_UNSW_NB15.csv', 'r') as file:
+    with open(param["dir"] + 'Test_UNSW_NB15.csv', 'r') as file:
         Xtest = pd.DataFrame(list(csv.DictReader(file)))
         Xtest.replace("", np.nan, inplace=True)
         Xtest.dropna(inplace=True)
@@ -39,26 +43,37 @@ if not param["LoadFromJson"]:
     # MI=mutual_info_classif(data["Xtrain"],data["Classification"])
 
     if param["No_0_MI"]:
-
         with open(param["dir"] + '0_MI.json') as json_file:
             j = json.load(json_file)
         data["Xtrain"] = data["Xtrain"].drop(columns=j)
         data["Xtest"] = data["Xtest"].drop(columns=j)
         print("0 MI features dropped!")
 
-    f_myfile = open(param["dir"] + 'YTrain.pickle', 'wb')
-    pickle.dump(data["Classification"], f_myfile)
-    f_myfile.close()
+     # AUTOENCODER
+    if param["autoencoder"]:
+        autoencoder = load_model(param["dir"] + 'Autoencoder.h5')
+        autoencoder.summary()
+        encoder = Model(inputs=autoencoder.input, outputs=autoencoder.get_layer('encod2').output)
+        encoder.summary()
+        # usa l'encoder con predict sul train_X e poi su test_X. Io qui ho creato anche il dataframe per salvarlo poi come csv
+        encoded_train = pd.DataFrame(encoder.predict(data["Xtrain"]))
+        data["Xtrain"] = encoded_train.add_prefix('feature_')
+        encoded_test = pd.DataFrame(encoder.predict(data["Xtest"]))
+        data["Xtest"] = encoded_test.add_prefix('feature_')
 
-    f_myfile = open(param["dir"] + 'YTest.pickle', 'wb')
-    pickle.dump(data["Ytest"], f_myfile)
-    f_myfile.close()
+    # f_myfile = open(param["dir"] + 'YTrain.pickle', 'wb')
+    # pickle.dump(data["Classification"], f_myfile)
+    # f_myfile.close()
+    #
+    # f_myfile = open(param["dir"] + 'YTest.pickle', 'wb')
+    # pickle.dump(data["Ytest"], f_myfile)
+    # f_myfile.close()
 
     model = DeepInsight_train_norm.train_norm(param, data, norm=False)
 
 else:
     images = {}
-    f_myfile = open(param["dir"] + 'train_15x15_No_0_MI_Mean.pickle', 'rb')
+    f_myfile = open(param["dir"] + 'train_8x8_Mean.pickle', 'rb')
     images["Xtrain"] = pickle.load(f_myfile)
     f_myfile.close()
 
@@ -66,7 +81,7 @@ else:
     images["Classification"] = pickle.load(f_myfile)
     f_myfile.close()
 
-    f_myfile = open(param["dir"] + 'test_15x15_No_0_MI_Mean.pickle', 'rb')
+    f_myfile = open(param["dir"] + 'test_8x8_Mean.pickle', 'rb')
     images["Xtest"] = pickle.load(f_myfile)
     f_myfile.close()
 

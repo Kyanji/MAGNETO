@@ -97,7 +97,7 @@ def CNN_Nature(images, y, param=None):
         x_train,
         y_train,
         epochs=param["epoch"],
-        verbose=2,
+        verbose=0,
         validation_data=(x_test, y_test),
         batch_size=param["batch"],
         callbacks=[EarlyStopping(monitor='val_loss', mode='min', patience=10),
@@ -113,8 +113,8 @@ def CNN_Nature(images, y, param=None):
 
     cf = confusion_matrix(y_test, Y_predicted)
 
-    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TN_val": cf[0][0],
-                   "FP_val": cf[0][1], "FN_val": cf[1][0], "TP_val": cf[1][1]
+    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
+                   "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }
 
 
@@ -178,7 +178,6 @@ def CNN2(images, y, params=None):
 
     cf = confusion_matrix(y_test, Y_predicted)
 
-    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TN_val": cf[0][0],
-                   "FP_val": cf[0][1], "FN_val": cf[1][0], "TP_val": cf[1][1]
+    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
+                   "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }
-

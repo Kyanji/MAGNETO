@@ -25,6 +25,7 @@ YTestGlobal = []
 SavedParameters = []
 Mode = ""
 Name = ""
+best_val_acc = 0
 
 
 def hyperopt_fcn(params):
@@ -51,10 +52,17 @@ def hyperopt_fcn(params):
     #      "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "filter": params["filter"], "filter2": params["filter2"],
     #      "kernel": params["kernel"], "learning_rate": params["learning_rate"], "momentum": params["momentum"]})
     SavedParameters.append(val)
+    global best_val_acc
+    print("val acc: "+str(val["balanced_accuracy_val"]))
+    if SavedParameters[-1]["balanced_accuracy_val"] > best_val_acc:
+        print("new saved model:" + str(SavedParameters[-1]))
+        model.save(Name + "model.h5")
+        best_val_acc = SavedParameters[-1]["balanced_accuracy_val"]
+
     if Mode == "CNN_Nature":
         SavedParameters[-1].update({"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) *
-                                                              100, "TN_test": cf[0][0], "FP_test": cf[0][1],
-                                    "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params[
+                                                              100, "TP_test": cf[0][0], "FN_test": cf[0][1],
+                                    "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params[
                 "kernel"], "learning_rate": params["learning_rate"], "batch": params["batch"],
                                     "filter1": params["filter"],
                                     "filter2": params["filter2"],
@@ -68,7 +76,7 @@ def hyperopt_fcn(params):
              "filter1": params["filter"],
              "filter2": params["filter2"],
              "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
-    SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_test'], reverse=True)
+    SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_val'], reverse=True)
 
     try:
         with open(Name, 'w', newline='') as csvfile:
@@ -77,8 +85,7 @@ def hyperopt_fcn(params):
             writer.writerows(SavedParameters)
     except IOError:
         print("I/O error")
-
-    return {'loss': -balanced_accuracy_score(YTestGlobal, Y_predicted), 'status': STATUS_OK}
+    return {'loss': val["balanced_accuracy_val"], 'status': STATUS_OK}
 
 
 def train_norm(param, dataset, norm):
@@ -116,7 +123,7 @@ def train_norm(param, dataset, norm):
 
         # generate images
         XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_A_size"], q["max_B_size"], param["Dynamic_Size"],
-                                                    mutual_info=param["mutual_info"],  params=param)
+                                                    mutual_info=param["mutual_info"], params=param)
 
         del q["data"]
         print("Train Images done!")
@@ -165,7 +172,7 @@ def train_norm(param, dataset, norm):
                                 "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
                                 "epoch": param["epoch"]}
     elif param["Mode"] == "CNN2":
-        optimizable_variable = {
+        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
             "filter": hp.choice("filter", [16, 32, 64, 128]),
             "filter2": hp.choice("filter2", [16, 32, 64, 128]),
             "batch": hp.choice("batch", [32, 64, 128, 256, 512]),

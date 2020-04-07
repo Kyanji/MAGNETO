@@ -21,7 +21,8 @@ def res(cm):
     return r
 
 
-with open('C:/Users/deros/Desktop/tesi doc/d2/res50x50_MI_CNN2.csv', 'r') as file:
+n = "C:/Users/deros/Desktop/cnn2/res_34x34_Mean_CNN2.csv"
+with open(n, 'r') as file:
     f = pd.DataFrame(list(csv.DictReader(file)))
 time = f["time"]
 del f['time']
@@ -46,4 +47,6 @@ f["F1_test"] = r[4]
 f["FAR_test"] = r[5]
 f["TPR_test"] = r[6]
 f["time"] = time
-f.to_excel('C:/Users/deros/Desktop/tesi doc/d2-Res/res50x50_MI_CNN2.xlsx', index=False)
+n = n.replace(".csv", ".xlsx")
+print(n)
+f.to_excel(n, index=False)
