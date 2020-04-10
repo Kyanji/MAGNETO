@@ -172,10 +172,6 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     # find duplicates
     print("Collisioni: " + str(find_duplicate(zp)))
 
-    # a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
-    # plt.imshow(a, cmap="gray")
-    # plt.savefig(str(A)+'.png')
-    # plt.show()
 
     # Training set
 

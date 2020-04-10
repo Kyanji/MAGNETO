@@ -1,11 +1,12 @@
 import json
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
 import pickle
 
 from keras import Model
 from keras.engine.saving import load_model
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pandas as pd
 import csv
@@ -15,9 +16,9 @@ from sklearn.feature_selection import mutual_info_classif
 
 # Parameters
 param = {"Max_A_Size": 8, "Max_B_Size": 8, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
-         "dir": "dataset/UNSW/", "Mode": "CNN_Nature",  # Mode : CNN_Nature, CNN2
-         "LoadFromJson": True, "mutual_info": False,
-         "hyper_opt_evals": 50, "epoch": 1, "No_0_MI": False,  # True -> Removing 0 MI Features
+         "dir": "dataset/UNSW/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
+         "LoadFromJson": False, "mutual_info": False,
+         "hyper_opt_evals": 50, "epoch": 40, "No_0_MI": False,  # True -> Removing 0 MI Features
          "autoencoder": True
          }
 
@@ -60,6 +61,15 @@ if not param["LoadFromJson"]:
         data["Xtrain"] = encoded_train.add_prefix('feature_')
         encoded_test = pd.DataFrame(encoder.predict(data["Xtest"]))
         data["Xtest"] = encoded_test.add_prefix('feature_')
+
+        f_myfile = open(param["dir"] + 'Xtrain_auto.pickle', 'wb')
+        pickle.dump(data["Xtrain"], f_myfile)
+        f_myfile.close()
+
+        f_myfile = open(param["dir"] + 'Xtest_auto.pickle', 'wb')
+        pickle.dump(data["Xtest"], f_myfile)
+        f_myfile.close()
+
 
     # f_myfile = open(param["dir"] + 'YTrain.pickle', 'wb')
     # pickle.dump(data["Classification"], f_myfile)

@@ -44,13 +44,9 @@ def hyperopt_fcn(params):
     Y_predicted = np.argmax(Y_predicted, axis=1)
     elapsed_time = time.time() - start_time
     cf = confusion_matrix(YTestGlobal, Y_predicted)
-    print(cf)
-    print(balanced_accuracy_score(YTestGlobal, Y_predicted))
+    #print(cf)
+    print("test accuracy: "+str(balanced_accuracy_score(YTestGlobal, Y_predicted)))
     K.clear_session()
-    # SavedParameters.append(
-    #     {"balanced_accuracy": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN": cf[0][0],
-    #      "FP": cf[0][1], "FN": cf[1][0], "TP": cf[1][1], "filter": params["filter"], "filter2": params["filter2"],
-    #      "kernel": params["kernel"], "learning_rate": params["learning_rate"], "momentum": params["momentum"]})
     SavedParameters.append(val)
     global best_val_acc
     print("val acc: "+str(val["balanced_accuracy_val"]))
@@ -69,8 +65,8 @@ def hyperopt_fcn(params):
                                     "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
     elif Mode == "CNN2":
         SavedParameters[-1].update(
-            {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TN_test": cf[0][0],
-             "FP_test": cf[0][1], "FN_test": cf[1][0], "TP_test": cf[1][1], "kernel": params["kernel"],
+            {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TP_test": cf[0][0],
+             "FN_test": cf[0][1], "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params["kernel"],
              "learning_rate": params["learning_rate"],
              "batch": params["batch"],
              "filter1": params["filter"],
@@ -85,7 +81,7 @@ def hyperopt_fcn(params):
             writer.writerows(SavedParameters)
     except IOError:
         print("I/O error")
-    return {'loss': val["balanced_accuracy_val"], 'status': STATUS_OK}
+    return {'loss': -val["balanced_accuracy_val"], 'status': STATUS_OK}
 
 
 def train_norm(param, dataset, norm):
