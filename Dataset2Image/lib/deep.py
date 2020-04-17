@@ -5,7 +5,7 @@ from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, BatchNormalizatio
     Concatenate, Dropout
 from keras.optimizers import SGD, Adam
 from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix, balanced_accuracy_score
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score, f1_score
 from sklearn.model_selection import train_test_split
 
 
@@ -112,7 +112,6 @@ def CNN_Nature(images, y, param=None):
     Y_predicted = np.argmax(Y_predicted, axis=1)
 
     cf = confusion_matrix(y_test, Y_predicted)
-
     return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
                    "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }
@@ -177,7 +176,7 @@ def CNN2(images, y, params=None):
     Y_predicted = np.argmax(Y_predicted, axis=1)
 
     cf = confusion_matrix(y_test, Y_predicted)
-
-    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
+    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100,
+                   "TP_val": cf[0][0],
                    "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }

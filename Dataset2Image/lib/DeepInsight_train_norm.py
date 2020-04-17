@@ -8,7 +8,7 @@ from hyperopt import STATUS_OK
 from hyperopt import tpe, hp, Trials, fmin
 from keras import backend as K
 from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix, balanced_accuracy_score
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score, f1_score
 
 from Dataset2Image.lib.Cart2Pixel import Cart2Pixel
 from Dataset2Image.lib.ConvPixel import ConvPixel
@@ -28,6 +28,32 @@ Name = ""
 best_val_acc = 0
 
 
+def res(cm, val):
+    tp = cm[0][0]  # attacks true
+    fn = cm[0][1]  # attacs predict normal
+    fp = cm[1][0]  # normal predict attacks
+    tn = cm[1][1]  # normal as normal
+    attacks = tp + fn
+    normals = fp + tn
+    if val and normals == 7400:
+        print("ok")
+    elif val:
+        print("error val")
+    if (not val) and normals == 56000:
+        print("ok")
+    elif not val:
+        print("error")
+    OA = (tp + tn) / (attacks + normals)
+    AA = ((tp / attacks) + (tn / normals)) / 2
+    P = tp / (tp + fp)
+    R = tp / (tp + fn)
+    F1 = 2 * ((P * R) / (P + R))
+    FAR = fp / (fp + tn)
+    TPR = tp / (tp + fn)
+    r = [OA, AA, P, R, F1, FAR, TPR]
+    return r
+
+
 def hyperopt_fcn(params):
     if params["filter"] == params["filter2"]:
         return {'loss': np.inf, 'status': STATUS_OK}
@@ -44,16 +70,12 @@ def hyperopt_fcn(params):
     Y_predicted = np.argmax(Y_predicted, axis=1)
     elapsed_time = time.time() - start_time
     cf = confusion_matrix(YTestGlobal, Y_predicted)
-    #print(cf)
-    print("test accuracy: "+str(balanced_accuracy_score(YTestGlobal, Y_predicted)))
+    # print(cf)
+    # print("test F1_score: " + str(f1_score(YTestGlobal, Y_predicted)))
     K.clear_session()
     SavedParameters.append(val)
     global best_val_acc
-    print("val acc: "+str(val["balanced_accuracy_val"]))
-    if SavedParameters[-1]["balanced_accuracy_val"] > best_val_acc:
-        print("new saved model:" + str(SavedParameters[-1]))
-        model.save(Name + "model.h5")
-        best_val_acc = SavedParameters[-1]["balanced_accuracy_val"]
+    # print("val acc: " + str(val["F1_score_val"]))
 
     if Mode == "CNN_Nature":
         SavedParameters[-1].update({"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) *
@@ -72,7 +94,35 @@ def hyperopt_fcn(params):
              "filter1": params["filter"],
              "filter2": params["filter2"],
              "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
-    SavedParameters = sorted(SavedParameters, key=lambda i: i['balanced_accuracy_val'], reverse=True)
+    cm_val = [[SavedParameters[-1]["TP_val"], SavedParameters[-1]["FN_val"]],
+              [SavedParameters[-1]["FP_val"], SavedParameters[-1]["TN_val"]]]
+
+    r = res(cm_val, True)
+    SavedParameters[-1].update({
+        "OA_val": r[0],
+        "P_val": r[2],
+        "R_val": r[3],
+        "F1_val": r[4],
+        "FAR_val": r[5],
+        "TPR_val": r[6]
+    })
+    cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]], 
+               [SavedParameters[-1]["FP_test"], SavedParameters[-1]["TN_test"]]]
+    r = res(cm_test, False)
+    SavedParameters[-1].update({
+        "OA_test": r[0],
+        "P_test": r[2],
+        "R_test": r[3],
+        "F1_test": r[4],
+        "FAR_test": r[5],
+        "TPR_test": r[6]
+    })
+    if SavedParameters[-1]["F1_val"] > best_val_acc:
+        print("new saved model:" + str(SavedParameters[-1]))
+        model.save(Name + "model.h5")
+        best_val_acc = SavedParameters[-1]["F1_val"]
+
+    SavedParameters = sorted(SavedParameters, key=lambda i: i['F1_val'], reverse=True)
 
     try:
         with open(Name, 'w', newline='') as csvfile:
@@ -81,7 +131,7 @@ def hyperopt_fcn(params):
             writer.writerows(SavedParameters)
     except IOError:
         print("I/O error")
-    return {'loss': -val["balanced_accuracy_val"], 'status': STATUS_OK}
+    return {'loss': -val["F1_val"], 'status': STATUS_OK}
 
 
 def train_norm(param, dataset, norm):
@@ -169,13 +219,13 @@ def train_norm(param, dataset, norm):
                                 "epoch": param["epoch"]}
     elif param["Mode"] == "CNN2":
         optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
-            "filter": hp.choice("filter", [16, 32, 64, 128]),
-            "filter2": hp.choice("filter2", [16, 32, 64, 128]),
-            "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
-            'dropout1': hp.uniform("dropout1", 0, 1),
-            'dropout2': hp.uniform("dropout2", 0, 1),
-            "learning_rate": hp.uniform("learning_rate", 1e-4, 1e-1),
-            "epoch": param["epoch"]}
+                                "filter": hp.choice("filter", [16, 32, 64, 128]),
+                                "filter2": hp.choice("filter2", [16, 32, 64, 128]),
+                                "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
+                                'dropout1': hp.uniform("dropout1", 0, 1),
+                                'dropout2': hp.uniform("dropout2", 0, 1),
+                                "learning_rate": hp.uniform("learning_rate", 1e-4, 1e-1),
+                                "epoch": param["epoch"]}
     global Mode
     Mode = param["Mode"]
 

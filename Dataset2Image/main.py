@@ -16,10 +16,10 @@ from sklearn.feature_selection import mutual_info_classif
 
 # Parameters
 param = {"Max_A_Size": 8, "Max_B_Size": 8, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
-         "dir": "dataset/UNSW/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
-         "LoadFromJson": False, "mutual_info": False,
-         "hyper_opt_evals": 50, "epoch": 40, "No_0_MI": False,  # True -> Removing 0 MI Features
-         "autoencoder": True
+         "dir": "dataset/UNSW/", "Mode": "CNN_Nature",  # Mode : CNN_Nature, CNN2
+         "LoadFromJson": True, "mutual_info": False, # Mean or MI
+         "hyper_opt_evals": 50, "epoch": 1, "No_0_MI": False,  # True -> Removing 0 MI Features
+         "autoencoder": False
          }
 
 # TODO delete
