@@ -117,6 +117,7 @@ def hyperopt_fcn(params):
         "FAR_test": r[5],
         "TPR_test": r[6]
     })
+    #Save model
     if SavedParameters[-1]["F1_val"] > best_val_acc:
         print("new saved model:" + str(SavedParameters[-1]))
         model.save(Name + "model.h5")
