@@ -120,7 +120,7 @@ def hyperopt_fcn(params):
     #Save model
     if SavedParameters[-1]["F1_val"] > best_val_acc:
         print("new saved model:" + str(SavedParameters[-1]))
-        model.save(Name + "model.h5")
+        model.save(Name.replace(".csv","_model.h5"))
         best_val_acc = SavedParameters[-1]["F1_val"]
 
     SavedParameters = sorted(SavedParameters, key=lambda i: i['F1_val'], reverse=True)
