@@ -49,10 +49,11 @@ def dataset_with_best_duplicates(X, y, zp):
     zp = np.delete(zp, toDelete, axis=1)
     return X.transpose(), zp, toDelete
 
-def count_model_col(rotatedData,Q,r1,r2):
+
+def count_model_col(rotatedData, Q, r1, r2, params=None):
     tot = []
-    for f in range(r1-1, r2):
-        A = f
+    for f in range(r1 - 1, r2):
+        A = int(f * 2 / 3)
         B = f
         xp = np.round(
             1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
@@ -63,14 +64,21 @@ def count_model_col(rotatedData,Q,r1,r2):
         B = max(yp)
 
         # find duplicates
-        sum=str(find_duplicate(zp))
+        sum = str(find_duplicate(zp))
         print("Collisioni: " + sum)
-        tot.append([A,sum])
+        tot.append([A, B, sum])
         a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
         plt.imshow(a, cmap="gray")
-        plt.savefig(str(A)+'.png')
+        if params != None:
+            plt.savefig(params["dir"] + str(A) + "x" + str(B) + '.png')
+        else:
+            plt.savefig(str(A) + '.png')
         plt.show()
-    pd.DataFrame(tot).to_csv("Collision_autoencoder.csv")
+    if params != None:
+        pd.DataFrame(tot, columns=["indexA", "indexB", "collisions"]).to_excel(params["dir"] + "Collisionmezzi.xlsx",
+                                                                               index=False)
+    else:
+        pd.DataFrame(tot, columns=["index", "collisions"]).to_excel("Collision.xlsx", index=False)
 
 
 def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, only_model=False, params=None):
@@ -110,13 +118,13 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     coord = np.array([x, y])
     rotatedData = np.array(R.dot(coord))  # Z
 
-    # rotatedData = np.delete(rotatedData, [125], 1)
+    # rotatedData = np.delete(rotatedData, [59], 1)
     # rotatedData=np.delete(rotatedData, [175],1)
     # rotatedData=np.delete(rotatedData, [184],1)
-    # Q["data"] = np.delete(Q["data"], [125], axis=0)
+    # Q["data"] = np.delete(Q["data"], [59], axis=0)
     # Q["data"] = np.delete(Q["data"], [175], axis=0)
     # Q["data"] = np.delete(Q["data"], [184], axis=0)
-    # n = n - 3
+    # n = n - 1
     plt.scatter(rotatedData[0, :], rotatedData[1:])
     plt.axis('square')
     plt.show(block=False)
@@ -146,8 +154,8 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     dmin = np.linalg.norm(rotatedData[:, min_p1] - rotatedData[:, min_p2])
     rec_x_axis = abs(zrect[0, 0] - zrect[1, 0])
     rec_y_axis = abs(zrect[1, 1] - zrect[2, 1])
-
-    #count_model_col(rotatedData,Q,5,20)
+    if only_model:
+        count_model_col(rotatedData, Q, 5, 50, params)
 
     if dynamic_size:
         precision_old = math.sqrt(2)
@@ -165,13 +173,16 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
         1 + (A * (rotatedData[0, :] - min(rotatedData[0, :])) / (max(rotatedData[0, :]) - min(rotatedData[0, :]))))
     yp = np.round(
         1 + (-B) * (rotatedData[1, :] - max(rotatedData[1, :])) / (max(rotatedData[1, :]) - min(rotatedData[1, :])))
+    # Modified Feature Position | custom cut
+    cut = params["cut"]
+    if cut is not None:
+        xp[59] = cut
     zp = np.array([xp, yp])
     A = max(xp)
     B = max(yp)
 
     # find duplicates
     print("Collisioni: " + str(find_duplicate(zp)))
-
 
     # Training set
 
@@ -185,21 +196,31 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
         name = name + "_MI"
     else:
         name = name + "_Mean"
+    if cut is not None:
+        name = name + "_Cut"+str(cut)
     if only_model:
         a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
         plt.imshow(a, cmap="gray")
         plt.show()
-    else:
-        images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, n_sample)]
+    else:#custom_cut=range(0, cut),
+        a=ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i)
+        plt.imshow(a, cmap="gray")
+        plt.show()
+        if cut is not None:
+            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B,custom_cut=cut-1,  index=i) for i in range(0, n_sample)]
+        else:
+            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B,  index=i) for i in range(0, n_sample)]
+        plt.imshow(images[0], cmap="gray")
+        plt.show()
         filename = params["dir"] + "train" + name + ".pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(images, f_myfile)
         f_myfile.close()
 
-    image_model = {"xp": zp[0].tolist(), "yp": zp[1].tolist(), "A": A, "B": B}
-    j = json.dumps(image_model)
-    f = open(params["dir"] + name + "model.json", "w")
-    f.write(j)
-    f.close()
+    image_model = {"xp": zp[0].tolist(), "yp": zp[1].tolist(), "A": A, "B": B, "custom_cut": cut}
+    # j = json.dumps(image_model)
+    # f = open(params["dir"] + name + "model.json", "w")
+    # f.write(j)
+    # f.close()
 
     return images, image_model, toDelete

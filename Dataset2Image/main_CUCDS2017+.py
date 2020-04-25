@@ -2,7 +2,7 @@ import json
 import os
 import pickle
 
-#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pandas as pd
 import csv
@@ -10,8 +10,12 @@ from Dataset2Image.lib import DeepInsight_train_norm
 import numpy as np
 
 # Parameters
-param = {"Max_P_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180, "Mode": "neural",
-         "LoadFromJson": True}
+param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
+         "dir": "dataset/CICDS2017/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
+         "LoadFromJson": False, "mutual_info": True,  # Mean or MI
+         "hyper_opt_evals": 50, "epoch": 15, "No_0_MI": False,  # True -> Removing 0 MI Features
+         "autoencoder": False, "cut": None
+         }
 
 # TODO delete
 # with open('dataset/exptable.txt') as json_file:
@@ -33,15 +37,14 @@ if not param["LoadFromJson"]:
     #     data["Ytest"] = data["Xtest"]["Classification"]
     #     del data["Xtest"]["Classification"]
 
-    data["Xtest"]=data["Xtrain"]
-    data["Ytest"]=data["Classification"]
-
+    data["Xtest"] = data["Xtrain"]
+    data["Ytest"] = data["Classification"]
 
     #
-    # filename = "dataset/CICDS2017/param/y_testingset.pickle"
-    # f_myfile = open(filename, 'wb')
-    # pickle.dump(data["Ytest"], f_myfile)
-    # f_myfile.close()
+    filename = "dataset/CICDS2017/ytrain.pickle"
+    f_myfile = open(filename, 'wb')
+    pickle.dump(data["Ytest"], f_myfile)
+    f_myfile.close()
     # TODO remove this line
     # data["Ytest"] = 1
     # data["Xtest"] = data["Xtrain"]

@@ -13,6 +13,7 @@ from sklearn.metrics import confusion_matrix, balanced_accuracy_score, f1_score
 from Dataset2Image.lib.Cart2Pixel import Cart2Pixel
 from Dataset2Image.lib.ConvPixel import ConvPixel
 from Dataset2Image.lib.deep import CNN_Nature, CNN2
+import matplotlib.pyplot as plt
 
 import time
 
@@ -106,7 +107,7 @@ def hyperopt_fcn(params):
         "FAR_val": r[5],
         "TPR_val": r[6]
     })
-    cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]], 
+    cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]],
                [SavedParameters[-1]["FP_test"], SavedParameters[-1]["TN_test"]]]
     r = res(cm_test, False)
     SavedParameters[-1].update({
@@ -117,10 +118,10 @@ def hyperopt_fcn(params):
         "FAR_test": r[5],
         "TPR_test": r[6]
     })
-    #Save model
+    # Save model
     if SavedParameters[-1]["F1_val"] > best_val_acc:
         print("new saved model:" + str(SavedParameters[-1]))
-        model.save(Name.replace(".csv","_model.h5"))
+        model.save(Name.replace(".csv", "_model.h5"))
         best_val_acc = SavedParameters[-1]["F1_val"]
 
     SavedParameters = sorted(SavedParameters, key=lambda i: i['F1_val'], reverse=True)
@@ -170,7 +171,7 @@ def train_norm(param, dataset, norm):
 
         # generate images
         XGlobal, image_model, toDelete = Cart2Pixel(q, q["max_A_size"], q["max_B_size"], param["Dynamic_Size"],
-                                                    mutual_info=param["mutual_info"], params=param)
+                                                    mutual_info=param["mutual_info"], params=param, only_model=False)
 
         del q["data"]
         print("Train Images done!")
@@ -181,9 +182,21 @@ def train_norm(param, dataset, norm):
         dataset["Xtest"] = np.array(dataset["Xtest"]).transpose()
         print("generating Test Images")
         print(dataset["Xtest"].shape)
+
+        # if image_model["custom_cut"] is None:
+        #     XTestGlobal = list([np.ones([int(image_model["A"]), int(image_model["B"])])] * dataset["Xtest"].shape[1])
+        # else:
+        #     XTestGlobal = list([np.ones([int(image_model["A"] - image_model["custom_cut"]), int(image_model["B"])])] * \
+        #                   dataset["Xtest"].shape[1])
+        # for i in range(0, 100):  # dataset["Xtest"].shape[1]):
+        #     print(str(i) + " of " + str(dataset["Xtest"].shape[1]))
+        #     XTestGlobal[i] = ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
+        #                                image_model["A"], image_model["B"],
+        #                                custom_cut=range(0, image_model["custom_cut"]))
         XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
-                                 image_model["A"], image_model["B"]) for i in
-                       range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
+                                 image_model["A"], image_model["B"], custom_cut=range(0, image_model["custom_cut"]))
+                       for i in range(0, 100)]  # dataset["Xtest"].shape[1])]
+
         print("Test Images done!")
 
         # saving testingset
@@ -194,6 +207,8 @@ def train_norm(param, dataset, norm):
             name = name + "_MI"
         else:
             name = name + "_Mean"
+        if image_model["custom_cut"] is not None:
+            name = name + "_Cut" + str(image_model["custom_cut"])
         filename = param["dir"] + "test" + name + ".pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(XTestGlobal, f_myfile)
@@ -201,12 +216,12 @@ def train_norm(param, dataset, norm):
     else:
         XGlobal = dataset["Xtrain"]
         XTestGlobal = dataset["Xtest"]
+    # GAN
     del dataset["Xtrain"]
     del dataset["Xtest"]
     XTestGlobal = np.array(XTestGlobal)
-    image_size = XTestGlobal.shape[1]
-    print("shape" + str(XTestGlobal.shape))
-    XTestGlobal = np.reshape(XTestGlobal, [-1, image_size, image_size, 1])
+    image_size1, image_size2 = XTestGlobal[0].shape
+    XTestGlobal = np.reshape(XTestGlobal, [-1, image_size1, image_size2, 1])
     YTestGlobal = np.argmax(YTestGlobal, axis=1)
 
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}

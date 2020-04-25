@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import mutual_info_score
 
 
-def ConvPixel(FVec, xp, yp, A, B, base=1, index=0):
+def ConvPixel(FVec, xp, yp, A, B, base=1, custom_cut=None, index=0):
     n = len(FVec)
     M = np.ones([int(A), int(B)]) * base
     for j in range(0, n):
@@ -33,8 +33,9 @@ def ConvPixel(FVec, xp, yp, A, B, base=1, index=0):
     # print("Collisioni:")
     # print(dup.keys())
 
-    for index in dup.keys():
-        x, y = index.split("-")
-        M[int(float(x)) - 1, int(float(y)) - 1] = sum(FVec[list(dup[index])]) / len(dup[index])
-
+    # for index in dup.keys():
+    #     x, y = index.split("-")
+    #     M[int(float(x)) - 1, int(float(y)) - 1] = sum(FVec[list(dup[index])]) / len(dup[index])
+    if custom_cut is not None:
+        M = np.delete(M, range(0, custom_cut), 0)
     return M
