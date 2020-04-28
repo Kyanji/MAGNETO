@@ -68,7 +68,7 @@ def count_model_col(rotatedData, Q, r1, r2, params=None):
         print("Collisioni: " + sum)
         tot.append([A, B, sum])
         a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
-        plt.imshow(a, cmap="gray")
+
         if params != None:
             plt.savefig(params["dir"] + str(A) + "x" + str(B) + '.png')
         else:
@@ -197,21 +197,26 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     else:
         name = name + "_Mean"
     if cut is not None:
-        name = name + "_Cut"+str(cut)
+        name = name + "_Cut" + str(cut)
     if only_model:
         a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
         plt.imshow(a, cmap="gray")
         plt.show()
-    else:#custom_cut=range(0, cut),
-        a=ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i)
+    else:  # custom_cut=range(0, cut),
+        a = ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i)
         plt.imshow(a, cmap="gray")
         plt.show()
         if cut is not None:
-            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B,custom_cut=cut-1,  index=i) for i in range(0, n_sample)]
+            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, custom_cut=cut - 1, index=i) for i in
+                      range(0, n_sample)]
         else:
-            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B,  index=i) for i in range(0, n_sample)]
-        plt.imshow(images[0], cmap="gray")
-        plt.show()
+            a=np.where(Q["y"]==0)
+            attacks=Q["data"][:,a]
+            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, 30)]
+            for i in range(0, 30):
+                plt.imshow(images[i], cmap="gray")
+                plt.savefig(params["dir"] + str(i) + '.png')
+
         filename = params["dir"] + "train" + name + ".pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(images, f_myfile)

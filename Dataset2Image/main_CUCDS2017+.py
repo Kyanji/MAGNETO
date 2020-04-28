@@ -54,20 +54,24 @@ if not param["LoadFromJson"]:
 
 else:
     images = {}
-    f_myfile = open('dataset/CICDS2017/param/trainingsetImageNew10x10.pickle', 'rb')
+    f_myfile = open('dataset/CICDS2017/train_10x10_MI.pickle', 'rb')
     images["Xtrain"] = pickle.load(f_myfile)
     f_myfile.close()
 
-    f_myfile = open('dataset/CICDS2017/param/y_trainingset.pickle', 'rb')
+    f_myfile = open('dataset/CICDS2017/ytrain.pickle', 'rb')
     images["Classification"] = pickle.load(f_myfile)
     f_myfile.close()
 
-    f_myfile = open('dataset/CICDS2017/param/testingsetImageNew10x10.pickle', 'rb')
-    images["Xtest"] = pickle.load(f_myfile)
-    f_myfile.close()
+    # f_myfile = open('dataset/CICDS2017/test.pickle', 'rb')
+    # images["Xtest"] = pickle.load(f_myfile)
+    # f_myfile.close()
+    #
+    # f_myfile = open('dataset/CICDS2017/y_testingset.pickle', 'rb')
+    # images["Ytest"] = pickle.load(f_myfile)
+    # f_myfile.close()
 
-    f_myfile = open('dataset/CICDS2017/param/y_testingset.pickle', 'rb')
-    images["Ytest"] = pickle.load(f_myfile)
+    f_myfile = open('dataset/CICDS2017/gan_images10x10MI.pickle', 'rb')
+    gan = pickle.load(f_myfile)
     f_myfile.close()
 
     # with open('dataset/CICDS2017/Test.csv', 'r') as file:
@@ -75,5 +79,6 @@ else:
     #     Xtest.replace("", np.nan, inplace=True)
     #     Xtest.dropna(inplace=True)
     #     images["Ytest"] = Xtest["Classification"]
-
+    x = np.concatenate((images["Xtrain"], gan))
+    y=np.concatenate((images["Classification"], np.zeros(4000)))
     model = DeepInsight_train_norm.train_norm(param, images, norm=False)
