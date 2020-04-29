@@ -50,7 +50,8 @@ if not param["LoadFromJson"]:
         autoencoder.summary()
         encoder = Model(inputs=autoencoder.input, outputs=autoencoder.get_layer('encod2').output)
         encoder.summary()
-        # usa l'encoder con predict sul train_X e poi su test_X. Io qui ho creato anche il dataframe per salvarlo poi come csv
+        # usa l'encoder con predict sul train_X e poi su test_X. Io qui ho creato anche il dataframe per salvarlo poi
+        # come csv
         encoded_train = pd.DataFrame(encoder.predict(data["Xtrain"]))
         data["Xtrain"] = encoded_train.add_prefix('feature_')
         encoded_test = pd.DataFrame(encoder.predict(data["Xtest"]))

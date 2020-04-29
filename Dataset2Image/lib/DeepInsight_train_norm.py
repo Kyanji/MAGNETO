@@ -185,9 +185,14 @@ def train_norm(param, dataset, norm):
         #     XTestGlobal[i] = ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
         #                                image_model["A"], image_model["B"],
         #                                custom_cut=range(0, image_model["custom_cut"]))
-        XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
-                                 image_model["A"], image_model["B"], custom_cut=range(0, image_model["custom_cut"]))
-                       for i in range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
+        if image_model["custom_cut"]:
+            XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
+                                     image_model["A"], image_model["B"], custom_cut=range(0, image_model["custom_cut"]))
+                        for i in range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
+        else:
+            XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
+                                     image_model["A"], image_model["B"])
+                           for i in range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
 
         print("Test Images done!")
 

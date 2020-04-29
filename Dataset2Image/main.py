@@ -19,7 +19,7 @@ param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tS
          "dir": "dataset/CICDS2017/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
          "LoadFromJson": False, "mutual_info": False, # Mean or MI
          "hyper_opt_evals": 50, "epoch": 40, "No_0_MI": False,  # True -> Removing 0 MI Features
-         "autoencoder": False
+         "autoencoder": False, "cut": None
          }
 
 # TODO delete
