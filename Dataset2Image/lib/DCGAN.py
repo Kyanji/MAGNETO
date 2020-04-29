@@ -168,7 +168,7 @@ def train(dataset, epochs, param, generator, discriminator, generator_optimizer,
 
         # Cosine learning rate decay
         if (epoch + 1) % decay_step == 0:
-            new_lr_d = tf.train.cosine_decay(new_lr_d, min(global_step, lr_decay_steps), lr_decay_steps)
+            new_lr_d = tf.cosine_decay(new_lr_d, min(global_step, lr_decay_steps), lr_decay_steps)
             new_lr_g = tf.train.cosine_decay(new_lr_g, min(global_step, lr_decay_steps), lr_decay_steps)
             generator_optimizer = tf.train.AdamOptimizer(learning_rate=new_lr_d, beta_1=0.5)
             discriminator_optimizer = tf.train.AdamOptimizer(learning_rate=new_lr_g, beta_1=0.5)

@@ -28,17 +28,16 @@ if not param["LoadFromJson"]:
         data["Classification"] = data["Xtrain"]["Classification"]
         del data["Xtrain"]["Classification"]
 
-    # with open('dataset/CICDS2017/Test.csv', 'r') as file:
-    #     Xtest = pd.DataFrame(list(csv.DictReader(file)))
-    #     Xtest.replace("", np.nan, inplace=True)
-    #     Xtest.dropna(inplace=True)
-    #     data["Xtest"] = Xtest.astype(float)
-    #
-    #     data["Ytest"] = data["Xtest"]["Classification"]
-    #     del data["Xtest"]["Classification"]
+    with open('dataset/CICDS2017/Test.csv', 'r') as file:
+        Xtest = pd.DataFrame(list(csv.DictReader(file)))
+        Xtest.replace("", np.nan, inplace=True)
+        Xtest.dropna(inplace=True)
+        data["Xtest"] = Xtest.astype(float)
 
-    data["Xtest"] = data["Xtrain"]
-    data["Ytest"] = data["Classification"]
+        data["Ytest"] = data["Xtest"]["Classification"]
+        del data["Xtest"]["Classification"]
+
+
 
     #
     filename = "dataset/CICDS2017/ytrain.pickle"

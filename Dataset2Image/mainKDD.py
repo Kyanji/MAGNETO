@@ -28,15 +28,14 @@ if not param["LoadFromJson"]:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
         data["Classification"] = data["Xtrain"][' classification.'][:100]
         del data["Xtrain"][' classification.']
-    # with open(param["dir"] + 'Test.csv', 'r') as file:
-    #     Xtest = pd.DataFrame(list(csv.DictReader(file)))
-    #     Xtest.replace("", np.nan, inplace=True)
-    #     Xtest.dropna(inplace=True)
-    #     data["Xtest"] = Xtest.astype(float)
-    #     data["Ytest"] = data["Xtest"][' classification.'][:100]
-    #del data["Xtest"][' classification.']
-    data["Ytest"] = 1
-    data["Xtest"] = 1
+    with open(param["dir"] + 'Test.csv', 'r') as file:
+        Xtest = pd.DataFrame(list(csv.DictReader(file)))
+        Xtest.replace("", np.nan, inplace=True)
+        Xtest.dropna(inplace=True)
+        data["Xtest"] = Xtest.astype(float)
+        data["Ytest"] = data["Xtest"][' classification.'][:100]
+    del data["Xtest"][' classification.']
+
     # MI = mutual_info_classif(data["Xtrain"], data["Classification"])
     if param["No_0_MI"]:
         with open(param["dir"] + '0_MI.json') as json_file:

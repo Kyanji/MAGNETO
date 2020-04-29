@@ -212,7 +212,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
         else:
             a=np.where(Q["y"]==0)
             attacks=Q["data"][:,a]
-            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, 30)]
+            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, n_sample)]
             for i in range(0, 30):
                 plt.imshow(images[i], cmap="gray")
                 plt.savefig(params["dir"] + str(i) + '.png')
