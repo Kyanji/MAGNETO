@@ -36,14 +36,6 @@ def res(cm, val):
     tn = cm[1][1]  # normal as normal
     attacks = tp + fn
     normals = fp + tn
-    if val and normals == 7400:
-        print("ok")
-    elif val:
-        print("error val")
-    if (not val) and normals == 56000:
-        print("ok")
-    elif not val:
-        print("error")
     OA = (tp + tn) / (attacks + normals)
     AA = ((tp / attacks) + (tn / normals)) / 2
     P = tp / (tp + fp)
