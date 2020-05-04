@@ -8,7 +8,6 @@ from sklearn.feature_selection import mutual_info_classif
 from sklearn.manifold import TSNE
 from Dataset2Image.lib.MinRect import minimum_bounding_rectangle
 from Dataset2Image.lib.ConvPixel import ConvPixel
-import plotly.express as px
 import matplotlib.pyplot as plt
 import imageio
 

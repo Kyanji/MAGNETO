@@ -3,8 +3,15 @@ import tensorflow as tf
 
 tf.__version__
 
+physical_devices = tf.config.list_physical_devices('GPU')
+try:
+    tf.config.experimental.set_memory_growth(physical_devices[0], True)
+except:
+    # Invalid device or cannot modify virtual devices once initialized.
+    pass
 
 
+import csv
 import glob
 import imageio
 import matplotlib.pyplot as plt
@@ -15,8 +22,9 @@ from tensorflow.keras import layers
 import time
 from hyperopt import STATUS_OK
 from hyperopt import tpe, hp, Trials, fmin
-from IPython import display
 from matplotlib import pyplot
+from hyperopt import STATUS_OK
+from hyperopt import tpe, hp, Trials, fmin
 
 (train_images, train_labels), (_, _) = tf.keras.datasets.mnist.load_data()
 
@@ -24,24 +32,24 @@ train_images = train_images.reshape(train_images.shape[0], 28, 28, 1).astype('fl
 train_images = (train_images - 127.5) / 127.5  # Normalize the images to [-1, 1]
 
 BUFFER_SIZE = 60000
-BATCH_SIZE = 64
-optimizable_variable = {"batch": hp.choice("batch", [256]),
-                        'dropout_rate': hp.uniform("dropout_rate", 0.3, 0.3),
-                        'lr_initial_g': hp.uniform("lr_initial_g", 1e-4, 1e-4),
-                        "lr_initial_d": hp.uniform("lr_initial_d", 1e-4, 1e-4),
-                        "apply_label_smoothing": hp.choice("apply_label_smoothing", [0, 0]),
-                        "label_noise": hp.choice("label_noise", [0, 0])
+BATCH_SIZE = 0
+optimizable_variable = {"BATCH_SIZE": hp.choice("BATCH_SIZE", [256]),
+                        'dropout_rate': hp.uniform("dropout_rate", 0.1, 0.3),  # Best PARAM = 0.3
+                        #'lr_initial_g': hp.uniform("lr_initial_g", 0.01, 0.001),  # 1e-4
+                        #'lr_initial_d': hp.uniform("lr_initial_d", 0.01, 0.001)  # 1e-4
+                        # "lr_initial_d": hp.uniform("lr_initial_d", 0.001, 0.0001)    # 1e-4
                         }
-EPOCHS = 200
+EPOCHS = 5
 noise_dim = 100
 num_examples_to_generate = 16
-dropout_rate = 0.3
+
+
+# dropout_rate=0.3
 
 # Batch and shuffle the data
-train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+# train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 
-
-def make_generator_model():
+def make_generator_model(dropout_rate):
     model = tf.keras.Sequential()
     model.add(layers.Dense(7 * 7 * 256, use_bias=False, input_shape=(noise_dim,)))
     model.add(layers.LeakyReLU())
@@ -70,7 +78,7 @@ def make_generator_model():
     return model
 
 
-def make_discriminator_model():
+def make_discriminator_model(dropout_rate):
     model = tf.keras.Sequential()
     model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same',
                             input_shape=[28, 28, 1]))
@@ -89,57 +97,19 @@ def make_discriminator_model():
     return model
 
 
-def noisy_labels(y, p_flip):
-    # determine the number of labels to flip
-    n_select = int(p_flip * int(y.shape[0]))
-    # choose labels to flip
-    flip_ix = np.random.choice([i for i in range(int(y.shape[0]))], size=n_select)
-
-    op_list = []
-    # invert the labels in place
-    # y_np[flip_ix] = 1 - y_np[flip_ix]
-    for i in range(int(y.shape[0])):
-        if i in flip_ix:
-            op_list.append(tf.subtract(1, y[i]))
-        else:
-            op_list.append(y[i])
-
-    outputs = tf.stack(op_list)
-    return outputs
-
-
-def smooth_positive_labels(y):
-    return y - 0.3 + (np.random.random(y.shape) * 0.5)
-
-
-def smooth_negative_labels(y):
-    return y + np.random.random(y.shape) * 0.3
-
-
 def discriminator_loss(real_output, fake_output):
-    real_output_noise = noisy_labels(tf.ones_like(real_output), 5)
-    fake_output_noise = noisy_labels(tf.zeros_like(fake_output), 5)
-    real_output_smooth = smooth_positive_labels(real_output_noise)
-    fake_output_smooth = smooth_negative_labels(fake_output_noise)
     real_loss = cross_entropy(tf.ones_like(real_output), real_output)
     fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
     total_loss = real_loss + fake_loss
-
-    #real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-    #fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
-    #total_loss = real_loss + fake_loss
-    return total_loss
+    return total_loss / 2
 
 
 def generator_loss(fake_output):
-    fake_output_smooth = smooth_negative_labels(tf.ones_like(fake_output))
-    return cross_entropy(tf.ones_like(fake_output_smooth), fake_output)
-
-    #return cross_entropy(tf.ones_like(fake_output), fake_output)
+    return cross_entropy(tf.ones_like(fake_output), fake_output)
 
 
-#@tf.function
-def train_step(images, train_d, train_g):
+@tf.function
+def train_step(images, train_d, train_g, generator, discriminator, generator_optimizer, discriminator_optimizer):
     noise = tf.random.normal([BATCH_SIZE, noise_dim])
 
     with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
@@ -170,7 +140,54 @@ def plot_history(d_hist, g_hist, step=0, is_global=False):
     pyplot.show()
 
 
-def train(dataset, epochs):
+def opt(param):
+    # 'lr_initial_g': hp.uniform("lr_initial_g", 0.01, 0.001),  # 1e-4
+    # 'lr_initial_d': hp.uniform("lr_initial_d", 0.01, 0.001)  # 1e-4
+    # "lr
+    param["lr_initial_g"]=0.01
+    param["lr_initial_d"]=0.01
+    global BATCH_SIZE
+    BATCH_SIZE = param["BATCH_SIZE"]
+    train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_SIZE).batch(param["BATCH_SIZE"])
+    generator = make_generator_model(param["dropout_rate"])
+
+    noise = tf.random.normal([1, 100])
+    discriminator = make_discriminator_model(param["dropout_rate"])
+
+    generator_optimizer = tf.keras.optimizers.Adam(param["lr_initial_g"])
+    discriminator_optimizer = tf.keras.optimizers.Adam(param["lr_initial_d"])
+
+    checkpoint_dir = './training_checkpoints'
+    checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+    checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
+                                     discriminator_optimizer=discriminator_optimizer,
+                                     generator=generator,
+                                     discriminator=discriminator)
+
+    g, d, generator, discriminator = train(train_dataset, EPOCHS, checkpoint, generator, discriminator,
+                                           generator_optimizer, discriminator_optimizer, param)
+
+    noise = tf.random.normal([1024, 100])
+    predictions = generator(noise, training=False)
+    # sottrazione media
+    errors = train_images[0:] - predictions
+    scalar_error = np.mean(np.mean(np.power(rain_dataset[0] - predictions, 2), axis=1))
+    print(scalar_error)
+
+    input("controlla")
+
+    return {'loss': g + d, 'status': STATUS_OK}
+
+
+total_step = 0
+res = []
+
+
+def train(dataset, epochs, checkpoint, generator, discriminator, generator_optimizer, discriminator_optimizer, param):
+    print(param)
+    global res
+    global total_step
+    total_step = total_step + 1
     gen_ls = []
     disc_ls = []
     train_g = True
@@ -180,15 +197,20 @@ def train(dataset, epochs):
         gen = []
         disc = []
         for image_batch in dataset:
-            gen_loss, disc_loss = train_step(image_batch, train_d, train_g)
+            gen_loss, disc_loss = train_step(image_batch, train_d, train_g, generator, discriminator,
+                                             generator_optimizer, discriminator_optimizer)
             disc.append(disc_loss)
             gen.append(gen_loss)
 
         gen_ls.append(np.mean(gen))
         disc_ls.append(np.mean(disc))
-
+        res.append(param)
+        res[-1].update({"gen": gen_ls, "disc": disc_ls})
+        with open("res.csv", 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=res[0].keys())
+            writer.writeheader()
+            writer.writerows(res)
         # Produce images for the GIF as we go
-        display.clear_output(wait=True)
 
         generate_and_save_images(generator,
                                  epoch + 1,
@@ -196,18 +218,18 @@ def train(dataset, epochs):
         plot_history(disc_ls, gen_ls)
 
         # Save the model every 15 epochs
-        if (epoch + 1) % 15 == 0:
-            checkpoint.save(file_prefix=checkpoint_prefix)
-
+        if (epoch + 1) % 30 == 0:
+            generator.save("gen_" + str(total_step) + "_" + str(epoch) + ".h5")
+            discriminator.save("disc" + str(total_step) + "_" + str(epoch) + ".h5")
         print('Time for epoch {} is {} sec'.format(epoch + 1, time.time() - start))
         print("GEN:" + str(train_g) + " DISC" + str(train_d))
         print("GEN:" + str(gen_ls[-1]) + " DISC" + str(disc_ls[-1]))
 
     # Generate after the final epoch
-    display.clear_output(wait=True)
     generate_and_save_images(generator,
                              epochs,
                              seed)
+    return gen_ls[-1], disc_ls[-1], generator, discriminator  # model
 
 
 def generate_and_save_images(model, epoch, test_input):
@@ -228,30 +250,12 @@ def generate_and_save_images(model, epoch, test_input):
 
 cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
-generator = make_generator_model()
-
-noise = tf.random.normal([1, 100])
-generated_image = generator(noise, training=False)
-
-plt.imshow(generated_image[0, :, :, 0], cmap='gray')
-
-discriminator = make_discriminator_model()
-decision = discriminator(generated_image)
-print(decision)
-
-generator_optimizer = tf.keras.optimizers.Adam(1e-4)
-discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
-
-checkpoint_dir = './training_checkpoints'
-checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
-checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
-                                 discriminator_optimizer=discriminator_optimizer,
-                                 generator=generator,
-                                 discriminator=discriminator)
-
 seed = tf.random.normal([num_examples_to_generate, noise_dim])
+trials = Trials()
+print(optimizable_variable)
+fmin(opt, optimizable_variable, algo=tpe.suggest, max_evals=20)
 
-train(train_dataset, EPOCHS)
+# train(train_dataset, EPOCHS)
 
 """Restore the latest checkpoint."""
 

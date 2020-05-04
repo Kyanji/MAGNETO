@@ -231,13 +231,13 @@ def train_norm(param, dataset, norm):
                                 "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
                                 "epoch": param["epoch"]}
     elif param["Mode"] == "CNN2":
-        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
+        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 3 + 1)),
                                 "filter": hp.choice("filter", [16, 32, 64, 128]),
                                 "filter2": hp.choice("filter2", [16, 32, 64, 128]),
                                 "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
                                 'dropout1': hp.uniform("dropout1", 0, 1),
                                 'dropout2': hp.uniform("dropout2", 0, 1),
-                                "learning_rate": hp.uniform("learning_rate", 1e-4, 1e-1),
+                                "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
                                 "epoch": param["epoch"]}
     global Mode
     Mode = param["Mode"]
