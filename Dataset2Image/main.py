@@ -1,12 +1,12 @@
 import json
 import os
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 import pickle
 
 from keras import Model
 from keras.engine.saving import load_model
-
 
 import pandas as pd
 import csv
@@ -16,8 +16,8 @@ from sklearn.feature_selection import mutual_info_classif
 
 # Parameters
 param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
-         "dir": "dataset/CICDS2017/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
-         "LoadFromJson": False, "mutual_info": False, # Mean or MI
+         "dir": "dataset/UNSW_NB15/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
+         "LoadFromJson": False, "mutual_info": False,  # Mean or MI
          "hyper_opt_evals": 50, "epoch": 40, "No_0_MI": False,  # True -> Removing 0 MI Features
          "autoencoder": False, "cut": None
          }
@@ -50,7 +50,7 @@ if not param["LoadFromJson"]:
         data["Xtest"] = data["Xtest"].drop(columns=j)
         print("0 MI features dropped!")
 
-     # AUTOENCODER
+    # AUTOENCODER
     if param["autoencoder"]:
         autoencoder = load_model(param["dir"] + 'Autoencoder.h5')
         autoencoder.summary()
@@ -70,7 +70,6 @@ if not param["LoadFromJson"]:
         pickle.dump(data["Xtest"], f_myfile)
         f_myfile.close()
 
-
     # f_myfile = open(param["dir"] + 'YTrain.pickle', 'wb')
     # pickle.dump(data["Classification"], f_myfile)
     # f_myfile.close()
@@ -83,7 +82,7 @@ if not param["LoadFromJson"]:
 
 else:
     images = {}
-    f_myfile = open(param["dir"] + 'train_8x8_Mean.pickle', 'rb')
+    f_myfile = open(param["dir"] + 'train_10x10_Mean.pickle', 'rb')
     images["Xtrain"] = pickle.load(f_myfile)
     f_myfile.close()
 
@@ -91,13 +90,13 @@ else:
     images["Classification"] = pickle.load(f_myfile)
     f_myfile.close()
 
-    f_myfile = open(param["dir"] + 'test_8x8_Mean.pickle', 'rb')
-    images["Xtest"] = pickle.load(f_myfile)
-    f_myfile.close()
-
-    f_myfile = open(param["dir"] + 'YTest.pickle', 'rb')
-    images["Ytest"] = pickle.load(f_myfile)
-    f_myfile.close()
+    # f_myfile = open(param["dir"] + 'test_8x8_Mean.pickle', 'rb')
+    # images["Xtest"] = pickle.load(f_myfile)
+    # f_myfile.close()
+    #
+    # f_myfile = open(param["dir"] + 'YTest.pickle', 'rb')
+    # images["Ytest"] = pickle.load(f_myfile)
+    # f_myfile.close()
 
     # with open('dataset/CICDS2017/Test.csv', 'r') as file:
     #     Xtest=pd.DataFrame(list(csv.DictReader(file)))

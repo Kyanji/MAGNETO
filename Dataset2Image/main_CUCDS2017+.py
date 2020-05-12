@@ -13,7 +13,7 @@ import numpy as np
 param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
          "dir": "dataset/CICDS2017/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
          "LoadFromJson": False, "mutual_info": False,  # Mean or MI
-         "hyper_opt_evals": 50, "epoch": 15, "No_0_MI": False,  # True -> Removing 0 MI Features
+         "hyper_opt_evals": 50, "epoch": 20, "No_0_MI": False,  # True -> Removing 0 MI Features
          "autoencoder": False, "cut": None
          }
 

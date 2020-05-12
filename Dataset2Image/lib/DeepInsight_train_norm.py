@@ -185,7 +185,7 @@ def train_norm(param, dataset, norm):
         #     XTestGlobal[i] = ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
         #                                image_model["A"], image_model["B"],
         #                                custom_cut=range(0, image_model["custom_cut"]))
-        if image_model["custom_cut"]:
+        if image_model["custom_cut"] is not None:
             XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
                                      image_model["A"], image_model["B"], custom_cut=range(0, image_model["custom_cut"]))
                         for i in range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
@@ -224,7 +224,7 @@ def train_norm(param, dataset, norm):
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
 
     if param["Mode"] == "CNN_Nature":
-        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 7 + 1)),
+        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 3 + 1)),
                                 "filter": hp.choice("filter", [16, 32, 64, 128]),
                                 "filter2": hp.choice("filter2", [16, 32, 64, 128]),
                                 "batch": hp.choice("batch", [32]),
