@@ -10,7 +10,7 @@ except:
     # Invalid device or cannot modify virtual devices once initialized.
     pass
 
-
+# TODO delete
 import csv
 import glob
 import imageio

@@ -14,6 +14,7 @@ from keras.legacy import interfaces
 from keras.layers import Dense, Conv1D, Conv2D, Conv3D, Conv2DTranspose, Embedding
 import tensorflow as tf
 
+# TODO delete
 
 class DenseSN(Dense):
     def build(self, input_shape):
