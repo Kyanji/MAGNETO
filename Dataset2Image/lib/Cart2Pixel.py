@@ -102,9 +102,9 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     x = Y[:, 0]
     y = Y[:, 1]
     n, n_sample = Q["data"].shape
-    # plt.scatter(x, y)
+    plt.scatter(x, y)
     bbox = minimum_bounding_rectangle(Y)
-    # plt.fill(bbox[:, 0], bbox[:, 1], alpha=0.2)
+    plt.fill(bbox[:, 0], bbox[:, 1], alpha=0.2)
     # rotation
     grad = (bbox[1, 1] - bbox[0, 1]) / (bbox[1, 0] - bbox[0, 0])
     theta = np.arctan(grad)
@@ -112,7 +112,7 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
     bboxMatrix = np.matrix(bbox)
     zrect = (R.dot(bboxMatrix.transpose())).transpose()
     # zrect=R.dot(bboxMatrix)
-    # plt.fill(zrect[:, 0], zrect[:, 1], alpha=0.2)
+    plt.fill(zrect[:, 0], zrect[:, 1], alpha=0.2)
 
     coord = np.array([x, y])
     rotatedData = np.array(R.dot(coord))  # Z
@@ -197,6 +197,15 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
         name = name + "_Mean"
     if cut is not None:
         name = name + "_Cut" + str(cut)
+
+    # save model to file
+    image_model = {"xp": zp[0].tolist(), "yp": zp[1].tolist(), "A": A, "B": B, "custom_cut": cut,
+                   "toDelete": toDelete}
+    j = json.dumps(image_model)
+    f = open(params["dir"] + "model" + name + ".json", "w")
+    f.write(j)
+    f.close()
+
     if only_model:
         a = ConvPixel(Q["data"][:, 0], zp[0], zp[1], A, B)
         plt.imshow(a, cmap="gray")
@@ -211,18 +220,13 @@ def Cart2Pixel(Q=None, A=None, B=None, dynamic_size=False, mutual_info=False, on
         else:
             # a=np.where(Q["y"]==0)
             # attacks=Q["data"][:,a]
-            images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in range(0, n_sample)]
-
+            for i in range(0, 3):
+                images = [ConvPixel(Q["data"][:, i], zp[0], zp[1], A, B, index=i) for i in
+                          range(0, n_sample)]
 
         filename = params["dir"] + "train" + name + ".pickle"
         f_myfile = open(filename, 'wb')
         pickle.dump(images, f_myfile)
         f_myfile.close()
-
-    image_model = {"xp": zp[0].tolist(), "yp": zp[1].tolist(), "A": A, "B": B, "custom_cut": cut}
-    # j = json.dumps(image_model)
-    # f = open(params["dir"] + name + "model.json", "w")
-    # f.write(j)
-    # f.close()
 
     return images, image_model, toDelete

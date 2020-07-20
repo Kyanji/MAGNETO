@@ -1,11 +1,11 @@
 import numpy as np
-from keras import Model, Input
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, BatchNormalization, Activation, AveragePooling2D, Add, \
+from tensorflow.keras import Model, Input
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, BatchNormalization, Activation, AveragePooling2D, Add, \
     Concatenate, Dropout
-from keras.optimizers import SGD, Adam
-from keras.utils import to_categorical
-from sklearn.metrics import confusion_matrix, balanced_accuracy_score, f1_score
+from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.utils import to_categorical
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score
 from sklearn.model_selection import train_test_split
 
 
@@ -97,7 +97,7 @@ def CNN_Nature(images, y, param=None):
         x_train,
         y_train,
         epochs=param["epoch"],
-        verbose=0,
+        verbose=2,
         validation_data=(x_test, y_test),
         batch_size=param["batch"],
         callbacks=[EarlyStopping(monitor='val_loss', mode='min', patience=10),
@@ -112,6 +112,7 @@ def CNN_Nature(images, y, param=None):
     Y_predicted = np.argmax(Y_predicted, axis=1)
 
     cf = confusion_matrix(y_test, Y_predicted)
+
     return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
                    "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }
@@ -129,27 +130,27 @@ def CNN2(images, y, params=None):
     x_test = np.array(x_test)
 
     image_size = x_train.shape[1]
-    x_train = np.reshape(x_train, [-1, image_size, image_size, 1])
-    x_test = np.reshape(x_test, [-1, image_size, image_size, 1])
+    image_size2 = x_train.shape[2]
 
-    num_filters = params["filter"]
-    num_filters2 = params["filter2"]
+    x_train = np.reshape(x_train, [-1, image_size, image_size2, 1])
+    x_test = np.reshape(x_test, [-1, image_size, image_size2, 1])
+
 
     kernel = params["kernel"]
+    kernel2=int(kernel/2)
+    inputs = Input(shape=(image_size, image_size2, 1))
 
-    inputs = Input(shape=(image_size, x_train.shape[2], 1))
-
-    X = Conv2D(32, (2, 2), activation='relu', name='conv0')(inputs)
+    X = Conv2D(32, (kernel,kernel), activation='relu', name='conv0')(inputs)
     X = Dropout(rate=params['dropout1'])(X)
-    X = Conv2D(64, (2, 2), activation='relu', name='conv1')(X)
+    X = Conv2D(64, (kernel, kernel), activation='relu', name='conv1')(X)
     X = Dropout(rate=params['dropout2'])(X)
-    X = Conv2D(128, (1, 2), activation='relu', name='conv2')(X)
+    X = Conv2D(128, (kernel, kernel), activation='relu', name='conv2')(X)
     X = Flatten()(X)
     X = Dense(256, activation='relu', kernel_initializer='glorot_uniform')(X)
     X = Dense(1024, activation='relu', kernel_initializer='glorot_uniform')(X)
     X = Dense(2, activation='softmax', kernel_initializer='glorot_uniform')(X)
 
-    model = Model(input=inputs, output=X)
+    model = Model(inputs, X)
     adam = Adam(params["learning_rate"])
 
     model.compile(loss='binary_crossentropy',
@@ -176,7 +177,7 @@ def CNN2(images, y, params=None):
     Y_predicted = np.argmax(Y_predicted, axis=1)
 
     cf = confusion_matrix(y_test, Y_predicted)
-    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100,
-                   "TP_val": cf[0][0],
+
+    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
                    "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }

@@ -28,6 +28,32 @@ Mode = ""
 Name = ""
 best_val_acc = 0
 
+attack_label = 0
+
+
+def fix(f):
+    a = f["TN_val"]
+    b = f["FP_val"]
+    c = f["FN_val"]
+    d = f["TP_val"]
+    f["TN_val"] = d
+    f["TP_val"] = a
+    f["FP_val"] = c
+    f["FN_val"] = b
+    return f
+
+
+def fix_test(f):
+    a = f["TN_test"]
+    b = f["FP_test"]
+    c = f["FN_test"]
+    d = f["TP_test"]
+    f["TN_test"] = d
+    f["TP_test"] = a
+    f["FP_test"] = c
+    f["FN_test"] = b
+    return f
+
 
 def res(cm, val):
     tp = cm[0][0]  # attacks true
@@ -36,6 +62,14 @@ def res(cm, val):
     tn = cm[1][1]  # normal as normal
     attacks = tp + fn
     normals = fp + tn
+    print(attacks)
+    print(normals)
+
+    if attacks <= normals:
+        print("ok")
+    elif not val:
+        print("error")
+        return False, False
     OA = (tp + tn) / (attacks + normals)
     AA = ((tp / attacks) + (tn / normals)) / 2
     P = tp / (tp + fp)
@@ -44,11 +78,11 @@ def res(cm, val):
     FAR = fp / (fp + tn)
     TPR = tp / (tp + fn)
     r = [OA, AA, P, R, F1, FAR, TPR]
-    return r
+    return True, r
 
 
 def hyperopt_fcn(params):
-    if params["filter"] == params["filter2"]:
+    if Mode == "CNN_Nature" and params["filter"] == params["filter2"]:
         return {'loss': np.inf, 'status': STATUS_OK}
     global SavedParameters
     start_time = time.time()
@@ -84,13 +118,14 @@ def hyperopt_fcn(params):
              "FN_test": cf[0][1], "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params["kernel"],
              "learning_rate": params["learning_rate"],
              "batch": params["batch"],
-             "filter1": params["filter"],
-             "filter2": params["filter2"],
              "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
-    cm_val = [[SavedParameters[-1]["TP_val"], SavedParameters[-1]["FN_val"]],
-              [SavedParameters[-1]["FP_val"], SavedParameters[-1]["TN_val"]]]
+    if attack_label == 0:
+        SavedParameters[-1] = fix(SavedParameters[-1])
+        cm_val = [[SavedParameters[-1]["TP_val"], SavedParameters[-1]["FN_val"]],
+                  [SavedParameters[-1]["FP_val"], SavedParameters[-1]["TN_val"]]]
 
-    r = res(cm_val, True)
+    done, r = res(cm_val, True)
+    assert done == True
     SavedParameters[-1].update({
         "OA_val": r[0],
         "P_val": r[2],
@@ -101,15 +136,12 @@ def hyperopt_fcn(params):
     })
     cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]],
                [SavedParameters[-1]["FP_test"], SavedParameters[-1]["TN_test"]]]
-    r = res(cm_test, False)
-    SavedParameters[-1].update({
-        "OA_test": r[0],
-        "P_test": r[2],
-        "R_test": r[3],
-        "F1_test": r[4],
-        "FAR_test": r[5],
-        "TPR_test": r[6]
-    })
+    if attack_label == 0:
+        SavedParameters[-1] = fix_test(SavedParameters[-1])
+        cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]],
+                   [SavedParameters[-1]["FP_test"], SavedParameters[-1]["TN_test"]]]
+    done, r = res(cm_test, False)
+    assert done == True
     # Save model
     if SavedParameters[-1]["F1_val"] > best_val_acc:
         print("new saved model:" + str(SavedParameters[-1]))
@@ -188,7 +220,7 @@ def train_norm(param, dataset, norm):
         if image_model["custom_cut"] is not None:
             XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
                                      image_model["A"], image_model["B"], custom_cut=range(0, image_model["custom_cut"]))
-                        for i in range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
+                           for i in range(0, dataset["Xtest"].shape[1])]  # dataset["Xtest"].shape[1])]
         else:
             XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
                                      image_model["A"], image_model["B"])
@@ -224,21 +256,23 @@ def train_norm(param, dataset, norm):
     # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
 
     if param["Mode"] == "CNN_Nature":
-        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 3 + 1)),
-                                "filter": hp.choice("filter", [16, 32, 64, 128]),
-                                "filter2": hp.choice("filter2", [16, 32, 64, 128]),
-                                "batch": hp.choice("batch", [32]),
-                                "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
-                                "epoch": param["epoch"]}
-    elif param["Mode"] == "CNN2":
-        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 3 + 1)),
+        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
                                 "filter": hp.choice("filter", [16, 32, 64, 128]),
                                 "filter2": hp.choice("filter2", [16, 32, 64, 128]),
                                 "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
-                                'dropout1': hp.uniform("dropout1", 0, 1),
-                                'dropout2': hp.uniform("dropout2", 0, 1),
                                 "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
                                 "epoch": param["epoch"]}
+    elif param["Mode"] == "CNN2":
+        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
+                                "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
+                                'dropout1': hp.uniform("dropout1", 0, 1),
+                                'dropout2': hp.uniform("dropout2", 0, 1),
+                                "learning_rate": hp.uniform("learning_rate", 0.0001, 0.001),
+                                "epoch": param["epoch"]}
+
+    global attack_label
+    attack_label = param["attack_label"]
+
     global Mode
     Mode = param["Mode"]
 

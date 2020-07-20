@@ -35,8 +35,8 @@ BUFFER_SIZE = 60000
 BATCH_SIZE = 0
 optimizable_variable = {"BATCH_SIZE": hp.choice("BATCH_SIZE", [256]),
                         'dropout_rate': hp.uniform("dropout_rate", 0.1, 0.3),  # Best PARAM = 0.3
-                        #'lr_initial_g': hp.uniform("lr_initial_g", 0.01, 0.001),  # 1e-4
-                        #'lr_initial_d': hp.uniform("lr_initial_d", 0.01, 0.001)  # 1e-4
+                        # 'lr_initial_g': hp.uniform("lr_initial_g", 0.01, 0.001),  # 1e-4
+                        # 'lr_initial_d': hp.uniform("lr_initial_d", 0.01, 0.001)  # 1e-4
                         # "lr_initial_d": hp.uniform("lr_initial_d", 0.001, 0.0001)    # 1e-4
                         }
 EPOCHS = 5
@@ -144,8 +144,8 @@ def opt(param):
     # 'lr_initial_g': hp.uniform("lr_initial_g", 0.01, 0.001),  # 1e-4
     # 'lr_initial_d': hp.uniform("lr_initial_d", 0.01, 0.001)  # 1e-4
     # "lr
-    param["lr_initial_g"]=0.01
-    param["lr_initial_d"]=0.01
+    param["lr_initial_g"] = 0.01
+    param["lr_initial_d"] = 0.01
     global BATCH_SIZE
     BATCH_SIZE = param["BATCH_SIZE"]
     train_dataset = tf.data.Dataset.from_tensor_slices(train_images).shuffle(BUFFER_SIZE).batch(param["BATCH_SIZE"])
