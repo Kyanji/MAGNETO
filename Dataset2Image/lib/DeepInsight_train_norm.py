@@ -203,6 +203,17 @@ def train_norm(param, dataset, norm):
         if param["mutual_info"]:
             dataset["Xtest"] = dataset["Xtest"].drop(dataset["Xtest"].columns[toDelete], axis=1)
 
+        x = image_model["xp"]
+        y = image_model["yp"]
+        col = dataset["Xtest"].columns
+        col = col.delete(0)
+        print(col)
+        coor_model = {"coord": ["xp: " + str(i) + "," "yp :" + str(z) + ":" + col for i, z, col in zip(x, y, col)]}
+        j = json.dumps(coor_model)
+        f = open(param["dir"] + "MI_model.json", "w")
+        f.write(j)
+        f.close()
+
         dataset["Xtest"] = np.array(dataset["Xtest"]).transpose()
         print("generating Test Images")
         print(dataset["Xtest"].shape)
