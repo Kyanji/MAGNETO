@@ -17,14 +17,32 @@ from sklearn.feature_selection import mutual_info_classif
 # Parameters
 param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
          "dir": "dataset/UNSW_NB15/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
-         "LoadFromJson": False, "mutual_info": False,  # Mean or MI
+         "LoadFromJson": False, "mutual_info": True,  # Mean or MI
          "hyper_opt_evals": 50, "epoch": 40, "No_0_MI": False,  # True -> Removing 0 MI Features
-         "autoencoder": False, "cut": None
+         "autoencoder": True, "cut": None
          }
 
-# TODO delete
-# with open('dataset/exptable.txt') as json_file:
-#    data = json.load(json_file)["dset"]
+dataset = 1  # change dataset
+if dataset == 1:
+    train = 'TrainOneCls.csv'
+    test = 'Test.csv'
+    classif_label = 'Classification'
+    param["attack_label"] = 0
+elif dataset == 2:
+    train = 'Train.csv'
+    test = 'Test_UNSW_NB15.csv'
+    classif_label = 'classification'
+    param["attack_label"] = 1
+elif dataset == 3:
+    train = 'Train.csv'
+    test = 'Test.csv'
+    classif_label = ' classification.'
+    param["attack_label"] = 1
+elif dataset == 4:
+    train = 'AAGMTrain_OneClsNumeric.csv'
+    test = 'AAGMTest_OneClsNumeric.csv'
+    classif_label = 'classification'
+    param["attack_label"] = 0
 
 if not param["LoadFromJson"]:
     data = {}
@@ -69,6 +87,7 @@ if not param["LoadFromJson"]:
         f_myfile = open(param["dir"] + 'Xtest_auto.pickle', 'wb')
         pickle.dump(data["Xtest"], f_myfile)
         f_myfile.close()
+        #inserire ADASYN
 
     # f_myfile = open(param["dir"] + 'YTrain.pickle', 'wb')
     # pickle.dump(data["Classification"], f_myfile)
@@ -77,6 +96,7 @@ if not param["LoadFromJson"]:
     # f_myfile = open(param["dir"] + 'YTest.pickle', 'wb')
     # pickle.dump(data["Ytest"], f_myfile)
     # f_myfile.close()
+    #####data["Xtrain"][np.where(data["Classification"]==0)]
 
     model = DeepInsight_train_norm.train_norm(param, data, norm=False)
 

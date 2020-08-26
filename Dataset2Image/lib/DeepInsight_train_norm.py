@@ -81,6 +81,7 @@ def res(cm, val):
     return True, r
 
 
+# hyperopt function to optimize
 def hyperopt_fcn(params):
     if Mode == "CNN_Nature" and params["filter"] == params["filter2"]:
         return {'loss': np.inf, 'status': STATUS_OK}
@@ -93,19 +94,19 @@ def hyperopt_fcn(params):
         model, val = CNN2(XGlobal, YGlobal, params)
     print("start predict")
 
-    Y_predicted = model.predict(XTestGlobal, verbose=0, use_multiprocessing=True, workers=12)
-    Y_predicted = np.argmax(Y_predicted, axis=1)
+    y_predicted = model.predict(XTestGlobal, verbose=0, use_multiprocessing=True, workers=12)
+    y_predicted = np.argmax(y_predicted, axis=1)
     elapsed_time = time.time() - start_time
-    cf = confusion_matrix(YTestGlobal, Y_predicted)
+    cf = confusion_matrix(YTestGlobal, y_predicted)
     # print(cf)
-    # print("test F1_score: " + str(f1_score(YTestGlobal, Y_predicted)))
+    # print("test F1_score: " + str(f1_score(YTestGlobal, y_predicted)))
     K.clear_session()
     SavedParameters.append(val)
     global best_val_acc
     # print("val acc: " + str(val["F1_score_val"]))
 
     if Mode == "CNN_Nature":
-        SavedParameters[-1].update({"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) *
+        SavedParameters[-1].update({"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, y_predicted) *
                                                               100, "TP_test": cf[0][0], "FN_test": cf[0][1],
                                     "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params[
                 "kernel"], "learning_rate": params["learning_rate"], "batch": params["batch"],
@@ -114,7 +115,7 @@ def hyperopt_fcn(params):
                                     "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
     elif Mode == "CNN2":
         SavedParameters[-1].update(
-            {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, Y_predicted) * 100, "TP_test": cf[0][0],
+            {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, y_predicted) * 100, "TP_test": cf[0][0],
              "FN_test": cf[0][1], "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params["kernel"],
              "learning_rate": params["learning_rate"],
              "batch": params["batch"],
@@ -184,7 +185,6 @@ def train_norm(param, dataset, norm):
             dataset["Xtrain"] = (dataset["Xtrain"] - Out["Min"]) / (Out["Max"] - Out["Min"])
             dataset["Xtrain"] = dataset["Xtrain"].fillna(0)
 
-        # TODO implement norm 2
         print("trasposing")
 
         q = {"data": np.array(dataset["Xtrain"].values).transpose(), "method": param["Metod"],
@@ -199,15 +199,16 @@ def train_norm(param, dataset, norm):
 
         del q["data"]
         print("Train Images done!")
-        # generate testingset image
+        # generate testing set image
         if param["mutual_info"]:
             dataset["Xtest"] = dataset["Xtest"].drop(dataset["Xtest"].columns[toDelete], axis=1)
 
         x = image_model["xp"]
         y = image_model["yp"]
         col = dataset["Xtest"].columns
-        col = col.delete(0)
-        print(col)
+        # col = col.delete(0)
+        # print(col)
+        # coordinate model
         coor_model = {"coord": ["xp: " + str(i) + "," "yp :" + str(z) + ":" + col for i, z, col in zip(x, y, col)]}
         j = json.dumps(coor_model)
         f = open(param["dir"] + "MI_model.json", "w")
@@ -218,16 +219,6 @@ def train_norm(param, dataset, norm):
         print("generating Test Images")
         print(dataset["Xtest"].shape)
 
-        # if image_model["custom_cut"] is None:
-        #     XTestGlobal = list([np.ones([int(image_model["A"]), int(image_model["B"])])] * dataset["Xtest"].shape[1])
-        # else:
-        #     XTestGlobal = list([np.ones([int(image_model["A"] - image_model["custom_cut"]), int(image_model["B"])])] * \
-        #                   dataset["Xtest"].shape[1])
-        # for i in range(0, 100):  # dataset["Xtest"].shape[1]):
-        #     print(str(i) + " of " + str(dataset["Xtest"].shape[1]))
-        #     XTestGlobal[i] = ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
-        #                                image_model["A"], image_model["B"],
-        #                                custom_cut=range(0, image_model["custom_cut"]))
         if image_model["custom_cut"] is not None:
             XTestGlobal = [ConvPixel(dataset["Xtest"][:, i], np.array(image_model["xp"]), np.array(image_model["yp"]),
                                      image_model["A"], image_model["B"], custom_cut=range(0, image_model["custom_cut"]))
@@ -239,7 +230,7 @@ def train_norm(param, dataset, norm):
 
         print("Test Images done!")
 
-        # saving testingset
+        # saving testing set
         name = "_" + str(int(q["max_A_size"])) + "x" + str(int(q["max_B_size"]))
         if param["No_0_MI"]:
             name = name + "_No_0_MI"
@@ -250,9 +241,9 @@ def train_norm(param, dataset, norm):
         if image_model["custom_cut"] is not None:
             name = name + "_Cut" + str(image_model["custom_cut"])
         filename = param["dir"] + "test" + name + ".pickle"
-        f_myfile = open(filename, 'wb')
-        pickle.dump(XTestGlobal, f_myfile)
-        f_myfile.close()
+        f_file = open(filename, 'wb')
+        pickle.dump(XTestGlobal, f_file)
+        f_file.close()
     else:
         XGlobal = dataset["Xtrain"]
         XTestGlobal = dataset["Xtest"]
@@ -264,23 +255,25 @@ def train_norm(param, dataset, norm):
     XTestGlobal = np.reshape(XTestGlobal, [-1, image_size1, image_size2, 1])
     YTestGlobal = np.argmax(YTestGlobal, axis=1)
 
-    # optimizable_variable = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,"momentum":0.8}
+    # hyperparameters_to_optimize = {"filter_size": 3, "kernel": 2, "filter_size2": 6,"learning_rate":1e-5,
+    # "momentum":0.8}
 
     if param["Mode"] == "CNN_Nature":
-        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
+        hyperparameters_to_optimize = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
                                 "filter": hp.choice("filter", [16, 32, 64, 128]),
                                 "filter2": hp.choice("filter2", [16, 32, 64, 128]),
                                 "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
                                 "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
                                 "epoch": param["epoch"]}
     elif param["Mode"] == "CNN2":
-        optimizable_variable = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
+        hyperparameters_to_optimize = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
                                 "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
                                 'dropout1': hp.uniform("dropout1", 0, 1),
                                 'dropout2': hp.uniform("dropout2", 0, 1),
                                 "learning_rate": hp.uniform("learning_rate", 0.0001, 0.001),
                                 "epoch": param["epoch"]}
 
+    # output name
     global attack_label
     attack_label = param["attack_label"]
 
@@ -297,7 +290,7 @@ def train_norm(param, dataset, norm):
         Name = Name + "_Mean"
     Name = Name + "_" + Mode + ".csv"
     trials = Trials()
-    fmin(hyperopt_fcn, optimizable_variable, trials=trials, algo=tpe.suggest, max_evals=param["hyper_opt_evals"])
+    fmin(hyperopt_fcn, hyperparameters_to_optimize, trials=trials, algo=tpe.suggest, max_evals=param["hyper_opt_evals"])
 
     print("done")
     return 1

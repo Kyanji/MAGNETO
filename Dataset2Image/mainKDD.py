@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.feature_selection import mutual_info_classif
 
 # Parameters
-param = {"Max_A_Size": 26, "Max_B_Size": 26, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
+param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
          "dir": "dataset/KDD/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
          "LoadFromJson": False, "mutual_info": True,  # Mean or MI
          "hyper_opt_evals": 20, "epoch": 150, "No_0_MI": False,  # True -> Removing 0 MI Features

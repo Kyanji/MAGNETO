@@ -11,6 +11,8 @@ from Dataset2Image.lib.ConvPixel import ConvPixel
 import matplotlib.pyplot as plt
 import imageio
 
+plt.rcParams.update({'font.size': 22})
+
 import numpy as np
 
 
