@@ -26,7 +26,7 @@ param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tS
 
 if not param["LoadFromJson"]:
     data = {}
-    with open('dataset/CICDS2017/TrainOneCls.csv', 'r') as file:
+    with open('../Dataset2Image/dataset/CICDS2017/TrainOneCls.csv', 'r') as file:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
         data["Classification"] = data["Xtrain"]["Classification"]
         del data["Xtrain"]["Classification"]
@@ -85,11 +85,11 @@ if not param["LoadFromJson"]:
 
 else:
     images = {}
-    f_myfile = open('dataset/CICDS2017/train_10x10_MI.pickle', 'rb')
+    f_myfile = open('../Dataset2Image/dataset/CICDS2017/train_10x10_MI.pickle', 'rb')
     images["Xtrain"] = pickle.load(f_myfile)
     f_myfile.close()
 
-    f_myfile = open('dataset/CICDS2017/ytrain.pickle', 'rb')
+    f_myfile = open('../Dataset2Image/dataset/CICDS2017/ytrain.pickle', 'rb')
     images["Classification"] = pickle.load(f_myfile)
     f_myfile.close()
 

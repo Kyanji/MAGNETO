@@ -260,18 +260,18 @@ def train_norm(param, dataset, norm):
 
     if param["Mode"] == "CNN_Nature":
         hyperparameters_to_optimize = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
-                                "filter": hp.choice("filter", [16, 32, 64, 128]),
-                                "filter2": hp.choice("filter2", [16, 32, 64, 128]),
-                                "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
-                                "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
-                                "epoch": param["epoch"]}
+                                       "filter": hp.choice("filter", [16, 32, 64, 128]),
+                                       "filter2": hp.choice("filter2", [16, 32, 64, 128]),
+                                       "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
+                                       "learning_rate": hp.uniform("learning_rate", 0.0001, 0.01),
+                                       "epoch": param["epoch"]}
     elif param["Mode"] == "CNN2":
         hyperparameters_to_optimize = {"kernel": hp.choice("kernel", np.arange(2, 4 + 1)),
-                                "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
-                                'dropout1': hp.uniform("dropout1", 0, 1),
-                                'dropout2': hp.uniform("dropout2", 0, 1),
-                                "learning_rate": hp.uniform("learning_rate", 0.0001, 0.001),
-                                "epoch": param["epoch"]}
+                                       "batch": hp.choice("batch", [32, 64, 128, 256, 512]),
+                                       'dropout1': hp.uniform("dropout1", 0, 1),
+                                       'dropout2': hp.uniform("dropout2", 0, 1),
+                                       "learning_rate": hp.uniform("learning_rate", 0.0001, 0.001),
+                                       "epoch": param["epoch"]}
 
     # output name
     global attack_label
