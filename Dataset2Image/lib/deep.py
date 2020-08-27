@@ -117,7 +117,6 @@ def CNN_Nature(images, y, param=None):
                    "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }
 
-
 def CNN2(images, y, params=None):
     print(params)
     x_train, x_test, y_train, y_test = train_test_split(images,
@@ -178,6 +177,7 @@ def CNN2(images, y, params=None):
 
     cf = confusion_matrix(y_test, Y_predicted)
 
-    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100, "TP_val": cf[0][0],
+    return model, {"balanced_accuracy_val": balanced_accuracy_score(y_test, Y_predicted) * 100,
+                   "TP_val": cf[0][0],
                    "FN_val": cf[0][1], "FP_val": cf[1][0], "TN_val": cf[1][1]
                    }
