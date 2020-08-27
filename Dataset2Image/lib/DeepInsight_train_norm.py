@@ -115,18 +115,17 @@ def hyperopt_fcn(params):
                                     "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
     elif Mode == "CNN2":
         SavedParameters[-1].update(
-            {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, y_predicted) * 100, "TP_test": cf[0][0],
-             "FN_test": cf[0][1], "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params["kernel"],
-             "learning_rate": params["learning_rate"],
-             "batch": params["batch"],
-             "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
-    if attack_label == 0:
-        SavedParameters[-1] = fix(SavedParameters[-1])
-        cm_val = [[SavedParameters[-1]["TP_val"], SavedParameters[-1]["FN_val"]],
-                  [SavedParameters[-1]["FP_val"], SavedParameters[-1]["TN_val"]]]
+        {"balanced_accuracy_test": balanced_accuracy_score(YTestGlobal, y_predicted) * 100, "TP_test": cf[0][0],
+         "FN_test": cf[0][1], "FP_test": cf[1][0], "TN_test": cf[1][1], "kernel": params["kernel"],
+         "learning_rate": params["learning_rate"],
+         "batch": params["batch"],
+         "dropout1": params["dropout1"],
+         "dropout2": params["dropout2"],
+         "time": time.strftime("%H:%M:%S", time.gmtime(elapsed_time))})
+    cm_val = [[SavedParameters[-1]["TP_val"], SavedParameters[-1]["FN_val"]],
+              [SavedParameters[-1]["FP_val"], SavedParameters[-1]["TN_val"]]]
 
-    done, r = res(cm_val, True)
-    assert done == True
+    r = res(cm_val, True)
     SavedParameters[-1].update({
         "OA_val": r[0],
         "P_val": r[2],
@@ -137,12 +136,16 @@ def hyperopt_fcn(params):
     })
     cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]],
                [SavedParameters[-1]["FP_test"], SavedParameters[-1]["TN_test"]]]
-    if attack_label == 0:
-        SavedParameters[-1] = fix_test(SavedParameters[-1])
-        cm_test = [[SavedParameters[-1]["TP_test"], SavedParameters[-1]["FN_test"]],
-                   [SavedParameters[-1]["FP_test"], SavedParameters[-1]["TN_test"]]]
-    done, r = res(cm_test, False)
-    assert done == True
+    r = res(cm_test, False)
+    SavedParameters[-1].update({
+        "OA_test": r[0],
+        "P_test": r[2],
+        "R_test": r[3],
+        "F1_test": r[4],
+        "FAR_test": r[5],
+        "TPR_test": r[6]
+    })
+
     # Save model
     if SavedParameters[-1]["F1_val"] > best_val_acc:
         print("new saved model:" + str(SavedParameters[-1]))
