@@ -4,14 +4,14 @@ import pandas as pd
 import csv
 import numpy as np
 from imblearn.over_sampling import SMOTE, ADASYN
-from Dataset2Image.lib import DeepInsight_train_norm
+from Dataset2Image.lib import train
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 # Parameters
 param = {"Max_A_Size": 10, "Max_B_Size": 10, "Dynamic_Size": False, 'Metod': 'tSNE', "ValidRatio": 0.1, "seed": 180,
          "dir": "dataset/dataset4/", "Mode": "CNN2",  # Mode : CNN_Nature, CNN2
-         "LoadFromJson": False, "mutual_info": False,  # Mean or MI
+         "LoadFromPickle": False, "mutual_info": False,  # Mean or MI
          "hyper_opt_evals": 50, "epoch": 2, "No_0_MI": False,  # True -> Removing 0 MI Features
          "autoencoder": False, "cut": None, "enhanced_dataset": "gan"  # gan, smote, adasyn, ""None""
          }
@@ -38,7 +38,7 @@ elif dataset == 4:
     classif_label = 'classification'
     param["attack_label"] = 0
 
-if not param["LoadFromJson"]:
+if not param["LoadFromPickle"]:
     data = {}
     with open(param["dir"]+train, 'r') as file:
         data = {"Xtrain": pd.DataFrame(list(csv.DictReader(file))).astype(float), "class": 2}
@@ -61,7 +61,7 @@ if not param["LoadFromJson"]:
         ada = ADASYN(random_state=42)
         data["Xtrain"], data["Classification"] = ada.fit_resample(data["Xtrain"], data["Classification"])
 
-    model = DeepInsight_train_norm.train_norm(param, data, norm=False)
+    model = train.train_norm(param, data, norm=False)
 
 else:
     images = {}
@@ -99,7 +99,7 @@ else:
         images["Ytest"] = pickle.load(f_myfile)
         f_myfile.close()
 
-    model = DeepInsight_train_norm.train_norm(param, images, norm=False)
+    model = train.train_norm(param, images, norm=False)
 
 # PLOT DATA -- PCA/TSNE
 # from sklearn.decomposition import PCA

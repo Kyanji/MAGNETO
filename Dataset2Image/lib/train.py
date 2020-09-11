@@ -177,7 +177,7 @@ def train_norm(param, dataset, norm):
     global XGlobal
     global XTestGlobal
 
-    if not param["LoadFromJson"]:
+    if not param["LoadFromPickle"]:
         # norm
         Out = {}
         if norm:

@@ -10,7 +10,7 @@ from keras.engine.saving import load_model
 
 import pandas as pd
 import csv
-from Dataset2Image.lib import DeepInsight_train_norm
+from Dataset2Image.lib import train
 import numpy as np
 from sklearn.feature_selection import mutual_info_classif
 
@@ -74,7 +74,7 @@ if not param["LoadFromJson"]:
     pickle.dump(data["Ytest"], f_myfile)
     f_myfile.close()
 
-    model = DeepInsight_train_norm.train_norm(param, data, norm=False)
+    model = train.train_norm(param, data, norm=False)
 
 else:
     images = {}
@@ -104,4 +104,4 @@ else:
     #     Xtest.dropna(inplace=True)
     #     images["Ytest"] = Xtest["Classification"]
 
-    model = DeepInsight_train_norm.train_norm(param, images, norm=False)
+    model = train.train_norm(param, images, norm=False)
