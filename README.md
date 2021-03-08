@@ -1,4 +1,25 @@
-# iMAge based Gan enhanced convolutional NEural neTwOrk
+# iMAge based Gan enhanced convolutional NEural neTwOrk  (MAGNETO)
+
+
+The repository contains code refered to the work:
+
+_Giuseppina Andresini, Annalisa Appice, Luca De Rose, Donato Malerba_
+
+[GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection]() 
+
+Please cite our work if you find it useful for your research and work.
+```
+  @ARTICLE{, 
+  author={G. {Andresini} and A. {Appice} and L. {De Rose}  and D. {Malerba}}, 
+  journal={}, 
+  title={GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection}, 
+  year={}, 
+  volume={}, 
+  number={}, 
+  pages={},}
+```
+
+![MAGNETO]()
 
 ## Code requirements
 The code relies on the following python3.7+ libs.
