@@ -5,7 +5,7 @@ The repository contains code refered to the work:
 
 _Giuseppina Andresini, Annalisa Appice, Luca De Rose, Donato Malerba_
 
-[GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection]() 
+[GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection](https://github.com/Kyanji/MAGNETO) 
 
 Please cite our work if you find it useful for your research and work.
 ```
@@ -19,7 +19,7 @@ Please cite our work if you find it useful for your research and work.
   pages={},}
 ```
 
-![MAGNETO]()
+
 
 ## Code requirements
 The code relies on the following python3.7+ libs.
