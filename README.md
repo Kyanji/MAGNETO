@@ -21,7 +21,7 @@ url = {https://www.sciencedirect.com/science/article/pii/S0167739X21001382},
 author = {Giuseppina Andresini and Annalisa Appice and Luca {De Rose} and Donato Malerba}}
 ```
 
-
+![MAGNETO](https://ars.els-cdn.com/content/image/1-s2.0-S0167739X21001382-gr1.jpg)
 
 ## Code requirements
 The code relies on the following python3.7+ libs.
