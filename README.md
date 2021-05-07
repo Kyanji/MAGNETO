@@ -5,18 +5,20 @@ The repository contains code refered to the work:
 
 _Giuseppina Andresini, Annalisa Appice, Luca De Rose, Donato Malerba_
 
-[GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection](https://github.com/Kyanji/MAGNETO) 
+[GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection](https://www.sciencedirect.com/science/article/pii/S0167739X21001382) 
 
 Please cite our work if you find it useful for your research and work.
 ```
-  @ARTICLE{, 
-  author={G. {Andresini} and A. {Appice} and L. {De Rose}  and D. {Malerba}}, 
-  journal={}, 
-  title={GAN Augmentation to Deal with Imbalance in Imaging-based  Intrusion Detection}, 
-  year={}, 
-  volume={}, 
-  number={}, 
-  pages={},}
+ @article{ANDRESINI2021108,
+title = {GAN augmentation to deal with imbalance in imaging-based intrusion detection},
+journal = {Future Generation Computer Systems},
+volume = {123},
+pages = {108-127},
+year = {2021},
+issn = {0167-739X},
+doi = {https://doi.org/10.1016/j.future.2021.04.017},
+url = {https://www.sciencedirect.com/science/article/pii/S0167739X21001382},
+author = {Giuseppina Andresini and Annalisa Appice and Luca {De Rose} and Donato Malerba}}
 ```
 
 
