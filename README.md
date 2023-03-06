@@ -36,7 +36,7 @@ Packages needed are:
 * Pickle
 
 ## Data
-The following [DATASETS](https://drive.google.com/drive/folders/1lzl_O29ewRwfiRjV3g4m69ot0pLQYJy3?usp=sharing) are trasformed to have a binary classification task (attacks or normal traffic).
+The following [DATASETS](https://drive.google.com/drive/folders/1osTa-6qYgarQkndoNdgM5SjAcfhcnUMG?usp=share_link) are trasformed to have a binary classification task (attacks or normal traffic).
 The datasets used are:
 * CICIDS2017
 * UNSW-NB15
